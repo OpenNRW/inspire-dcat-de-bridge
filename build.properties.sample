@@ -1,0 +1,7 @@
+oai-pmh.base.url.external=http://localhost:8080/omdf
+
+db.item.csw.TYPE=inspire
+db.item.csw.URL=https://localhost:8080/soapServices/CSWStartup
+
+db.item.ckan.TYPE=ckan
+db.item.ckan.URL=https://localhost:9090

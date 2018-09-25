@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- this is required to let ace editor work in IE 8 and 7 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+    <meta charset="UTF-8"/>
+    <meta name="copyright" content="con terra GmbH"/>
+    <title>open.nrw-fassaden sample</title>
+
+    <link rel="stylesheet" href="multimarkdown_layout.css">
+    <style>
+
+        body.multimarkdown-preview,
+        body.multimarkdown-wiki-preview {
+            font-size: 11px;
+        }
+    </style>
+    <link rel="stylesheet" href="multimarkdown_default.css">
+</head>
+<body class="multimarkdown-preview">
+<div class="content">
+    <div class="page-header"><a href="https://git.it.nrw.de/ref321/drupal/nrwgov/open.nrw-fassaden/blob/master/README.md" name="wikipage" id="wikipage" title="Click here to open the file on GitHub">README.md</a></div>
+    <div class="hr"></div>
+    <h1 id="opennrw-fassaden-version-090-snapshot" md-pos="2-45"><a href="#opennrw-fassaden-version-090-snapshot" name="opennrw-fassaden-version-090-snapshot">open.nrw-fassaden (Version: 0.9.0-SNAPSHOT)</a></h1>
+    <p md-pos="46-142">Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal and vice versa.</p>
+    <h5 id="overview" md-pos="149-157"><a href="#overview" name="overview">Overview</a></h5>
+    <ul>
+        <li md-pos="159-282">Provides an OAI-PMH interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs) and returns it in DCAT-AP schema</li>
+        <li md-pos="282-412">Provides an OAI-PMH interface to harvest DCAT-AP metadata from CKAN and returns it in ISO 19139 schema (STILL WORK IN PROGRESS)</li>
+        <li md-pos="412-470">Deployed as a web application in Java servlet container</li>
+        <li md-pos="470-512">Implementation is based on Apache Camel</li>
+    </ul>
+    <h5 id="requirements" md-pos="519-531"><a href="#requirements" name="requirements">Requirements</a></h5>
+    <ul>
+        <li md-pos="533-541">JRE 8</li>
+        <li md-pos="541-552">Tomcat 8</li>
+    </ul>
+    <h5 id="building-with-apache-maven" md-pos="559-585"><a href="#building-with-apache-maven" name="building-with-apache-maven">Building with Apache Maven</a></h5>
+    <ol>
+        <li md-pos="587-683" class="p">
+            <p md-pos="590-683" class="p">cd to the root folder of this project (the folder that contains the pom.xml and this readme)</p>
+        </li>
+        <li md-pos="683-741" class="p">
+            <p md-pos="686-712" class="p">from the command line run</p>
+            <pre md-pos="720-741"><code md-pos="720-741"> &gt; mvn clean package
+</code></pre>
+        </li>
+    </ol>
+    <h5 id="deployment" md-pos="748-758"><a href="#deployment" name="deployment">Deployment</a></h5>
+    <p md-pos="760-824">Use your preferred method to deploy the webapp in Tomcat, e.g.:</p>
+    <ul>
+        <li md-pos="825-874">Copy the war file to the Tomcat webapps folder</li>
+        <li md-pos="874-924">Create a context file in the Tomcat host folder</li>
+    </ul>
+    <h5 id="configuration" md-pos="931-944"><a href="#configuration" name="configuration">Configuration</a></h5>
+    <p md-pos="946-1117">Logging can be configured with the log4j framework (see <a md-pos="1002-1038" href="http://logging.apache.org/log4j/1.2/">http://logging.apache.org/log4j/1.2/</a>).
+        By default a logfile is created here: tomcat/logs/open-nrw-ci-fassaden.log.</p>
+    <p md-pos="1118-1436">If you build with the env-dev profile, you can set your parameters during build, by including a build.poperties
+        file in the modile base directory. Please check the pom.xml
+        to see how parameters are set. The parameters can be changed after deployment in the file
+        camel-oai-pmh.properties. The available parameters are:</p>
+    <ul>
+        <li md-pos="1437-1544">oai-pmh.base.url.external: URL that external clients use to access the OAI-PMH interface web application</li>
+        <li md-pos="1544-1665">db.item.csw.TYPE: should be one of inspire, inspireSoap11 or inspireSoap11, depending on the protocol of the Geoportal</li>
+        <li md-pos="1665-1732">db.item.csw.URL: GetRecords URL of the geoportal to be harvested</li>
+        <li md-pos="1732-1786">db.item.ckan.TYPE: currently only ckan is supported</li>
+        <li md-pos="1786-1839">db.item.ckan.URL: CKAN catalog URL to be harvested</li>
+    </ul>
+    <p md-pos="1840-2576">Note on HTTPS: There are a few catalogs that use HTTPS connections. However, some use self-signed certificates, or
+        certificates from a CA that is not trusted by the JVM per default. In order to allow integration of such catalogs,
+        the Facades trusts all server certificates. Of course this is insecure, as it makes the harvester vulnerable
+        to man-in-the-middle attacks. But the same is true for catalogs that are connected via plain HTTP (ca. 90% of
+        catalogs), so this vulnerability is inherent as long as HTTP connections are allowed.
+        If you require trusted connections via HTTPS, just remove the bean
+        eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig from the Apache Camel Spring configuration
+        (/WEB-INF/classes/camel-oai-pmh.xml).</p>
+    <h2 id="usage" md-pos="2580-2585"><a href="#usage" name="usage">Usage</a></h2>
+    <h5 id="oai-pmh" md-pos="2593-2600"><a href="#oai-pmh" name="oai-pmh">OAI-PMH</a></h5>
+    <p md-pos="2602-2704">Each Facades is exposed by a distinct HTTP endpoint. The endpoints are reached with this URL pattern:</p>
+    <pre md-pos="2709-2798"><code md-pos="2709-2798">    &lt;tomcat-base-url&gt;&lt;webapp-path&gt;/omdf/&lt;harvester&gt;?&lt;verb=operation&gt;&amp;&lt;OPTIONAL argument&gt;
+</code></pre>
+    <p md-pos="2799-2965">So for example if tomcat-base-url is &quot;<a md-pos="2837-2858" href="http://localhost:8080">http://localhost:8080</a>&quot;, webapp-path is &quot;/&quot; and
+        you have a harvester &quot;gp-csw&quot; for the Geoportal, you can reach it with this URL:</p>
+    <pre md-pos="2970-3008"><code md-pos="2970-3008">    http://localhost:8080/omdf/gp-csw
+</code></pre>
+    <p md-pos="3009-3061">a harvester &quot;gp-ckan&quot; for the NRW open data portal:</p>
+    <pre md-pos="3066-3105"><code md-pos="3066-3105">    http://localhost:8080/omdf/gp-ckan
+</code></pre>
+    <p md-pos="3106-3222">You can issue OAI-PMH requests to all of the available endpoints. All endpoints support the same set of operations.</p>
+    <p md-pos="3223-3245">Supported operations:</p>
+    <ul>
+        <li md-pos="3245-3575"><b>ListIdentifiers</b>: This verb is used to retrieve the identifiers of records that can be harvested from a repository.  Optional arguments permit selectivity of the identifiers - based on their membership in a specific Set in the repository or based on their modification, creation, or deletion within a specific date range.</li>
+        <li md-pos="3575-4004"><b>ListRecords</b>: This verb is used to harvest records from a repository. Optional arguments permit selective harvesting of records based on set membership and/or datestamp. Depending on the repository's support for deletions, a returned header may have a status attribute of &quot;deleted&quot; if a record matching the arguments specified in the request has been deleted. No metadata will be present for records with deleted status.</li>
+        <li md-pos="4004-4530"><b>GetRecord</b>: This verb is used to retrieve an individual metadata record from a repository. Required arguments specify the identifier of the item from which the record is requested and the format of the metadata that should be included in the record. Depending on the level at which a repository tracks deletions, a header with a &quot;deleted&quot; value for the status attribute may be returned, in case the metadata format specified by the metadataPrefix is no longer available from the repository or from the specified item.</li>
+    </ul>
+    <p md-pos="4531-4553">Operations arguments:</p>
+    <ul>
+        <li md-pos="4553-5380" class="p">
+            <p md-pos="4555-4578" class="p"><b>ListIdentifiers</b></p>
+            <ul>
+                <li md-pos="4582-4789"><b>from</b> an OPTIONAL argument with a date value, which specifies that only the unique identifiers of records with a datestamp that is more recent than or equal to the specified date should be returned.</li>
+                <li md-pos="4793-4987"><b>until</b> an OPTIONAL argument with a date value, which specifies that only the unique identifiers of records with a datestamp older than or equal to the specified date should be returned.</li>
+                <li md-pos="4991-5380"><b>resumptionToken</b> an EXCLUSIVE argument with a value that is the flow control token returned by a previous ListIdentifiers request that issued a partial response.
+                    <ul>
+                        <li md-pos="5169-5380">Example:<br>
+                            <a md-pos="5200-5287" href="omdf/gp-csw?verb=ListIdentifiers&amp;from=2018-06-26&amp;until=2018-07-01">http://localhost:8080/omdf/gp-csw?verb=ListIdentifiers&amp;from=2018-06-26&amp;until=2018-07-01</a><br>
+                            <a md-pos="5308-5379" href="omdf/gp-ckan?verb=ListIdentifiers&amp;from=2018-06-26">http://localhost:8080/omdf/gp-ckan?verb=ListIdentifiers&amp;from=2018-06-26</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li md-pos="5381-6062" class="p">
+            <p md-pos="5383-5402" class="p"><b>ListRecords</b></p>
+            <ul>
+                <li md-pos="5406-5539"><b>from</b> an optional argument with a UTCdatetime value, which specifies a lower bound for datestamp-based selective harvesting.</li>
+                <li md-pos="5543-5677"><b>until</b> an optional argument with a UTCdatetime value, which specifies a upper bound for datestamp-based selective harvesting.</li>
+                <li md-pos="5681-6062"><b>resumptionToken</b> an EXCLUSIVE argument with a value that is the flow control token returned by a previous ListIdentifiers request that issued a partial response.
+                    <ul>
+                        <li md-pos="5859-6062">Example:<br>
+                            <a md-pos="5890-5973" href="omdf/gp-csw?verb=ListRecords&amp;from=2018-06-26&amp;until=2018-07-01">http://localhost:8080/omdf/gp-csw?verb=ListRecords&amp;from=2018-06-26&amp;until=2018-07-01</a><br>
+                            <a md-pos="5994-6061" href="omdf/gp-ckan?verb=ListRecords&amp;from=2018-06-26">http://localhost:8080/omdf/gp-ckan?verb=ListRecords&amp;from=2018-06-26</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li md-pos="6063-6491" class="p">
+            <p md-pos="6065-6082" class="p"><b>GetRecord</b></p>
+            <ul>
+                <li md-pos="6086-6491"><b>identifier</b> a required argument that specifies the unique identifier of the item in the repository from which the record must be disseminated.
+                    <ul>
+                        <li md-pos="6245-6491">Example:<br>
+                            <a md-pos="6276-6372" href="omdf/gp-csw?verb=GetRecord&amp;identifier=2c0b2365-347e-44aa-a1c8-a67b7ca5328e">http://localhost:8080/omdf/gp-csw?verb=GetRecord&amp;identifier=2c0b2365-347e-44aa-a1c8-a67b7ca5328e</a><br>
+                            <a md-pos="6393-6490" href="omdf/gp-ckan?verb=GetRecord&amp;identifier=d04a7b1e-3e60-4591-b04c-94912ac54afe">http://localhost:8080/omdf/gp-ckan?verb=GetRecord&amp;identifier=d04a7b1e-3e60-4591-b04c-94912ac54afe</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <h5 id="further-reading" md-pos="6499-6514"><a href="#further-reading" name="further-reading">Further Reading</a></h5>
+    <ul>
+        <li md-pos="6516-6576"><a md-pos="6518-6575" href="http://www.openarchives.org/OAI/openarchivesprotocol.html">http://www.openarchives.org/OAI/openarchivesprotocol.html</a></li>
+        <li md-pos="6576-6611"><a md-pos="6578-6610" href="http://www.w3.org/TR/vocab-dcat/">http://www.w3.org/TR/vocab-dcat/</a></li>
+        <li md-pos="6611-6684"><a md-pos="6613-6683" href="https://joinup.ec.europa.eu/asset/dcat_application_profile/description">https://joinup.ec.europa.eu/asset/dcat_application_profile/description</a></li>
+        <li md-pos="6684-6774"><a md-pos="6686-6773" href="https://joinup.ec.europa.eu/asset/dcat_application_profile/asset_release/geodcat-ap-v10">https://joinup.ec.europa.eu/asset/dcat_application_profile/asset_release/geodcat-ap-v10</a></li>
+        <li md-pos="6774-6801"><a md-pos="6776-6800" href="http://camel.apache.org/">http://camel.apache.org/</a></li>
+    </ul>
+</div>
+</body>
+</html>

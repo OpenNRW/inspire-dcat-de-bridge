@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<harvesterTypes>
+    <harvesterType>
+        <id>inspire</id>
+        <name>INSPIRE (plain XML)</name>
+        <description>Harvester type for INSPIRE catalogs (via CSW AP-ISO profile plain HTTP/POST)</description>
+    </harvesterType>
+    <harvesterType>
+        <id>inspireSoap11</id>
+        <name>INSPIRE SOAP 1.1</name>
+        <description>Harvester type for INSPIRE catalogs (via CSW AP-ISO profile SOAP 1.1)</description>
+    </harvesterType>
+    <harvesterType>
+        <id>inspireSoap12</id>
+        <name>INSPIRE SOAP 1.2</name>
+        <description>Harvester type for INSPIRE catalogs (via CSW AP-ISO profile SOAP 1.2)</description>
+    </harvesterType>
+    <harvesterType>
+        <id>ckan</id>
+        <name>Comprehensive Knowledge Archive Network</name>
+        <description>Harvester type for CKAN catalogs via OpenSearch</description>
+    </harvesterType>
+</harvesterTypes>

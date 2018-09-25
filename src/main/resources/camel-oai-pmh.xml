@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:xsl="http://camel.apache.org/schema/spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <!-- spring property placeholder -->
+    <context:property-placeholder location="classpath:camel-oai-pmh.properties"/>
+
+    <!-- Sets parameters in URL template for for OpenSearch requests -->
+    <bean id="osParameterProcessor" class="eu.odp.harvest.geo.oai.OsParameterProcessor"/>
+
+    <!--management bean used for CRUD operations on harvesters-->
+    <bean id="harvesterManager" class="eu.odp.harvest.geo.oai.HarvesterManager">
+        <property name="harvesterBaseUrl" value="${harvester.base.url}"/>
+    </bean>
+
+    <!-- This configures HttpClient to trust all server certificates - there are several catalogs that use self-signed
+     certificates. Remove this bean from the configuration if you require trusted HTTPS connections! -->
+    <bean id="httpClientConfigurer" class="eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig"/>
+
+    <!-- Camel context for this application -->
+    <camelContext xmlns="http://camel.apache.org/schema/spring" xmlns:oai="http://www.openarchives.org/OAI/2.0/">
+        <!-- internal endpoint of processing route for csw catalogs -->
+        <endpoint id="csw" uri="direct:csw"/>
+        <!-- internal endpoint of processing route for CKAN catalogs -->
+        <endpoint id="ckan" uri="direct:ckan"/>
+        <!-- internal endpoint of processing route for INSPIRE catalogs -->
+        <endpoint id="inspire" uri="direct:inspire"/>
+        <!-- internal endpoint of processing route for INSPIRE catalogs via SOAP 1.1 -->
+        <endpoint id="inspireSoap11" uri="direct:inspireSoap11"/>
+        <!-- internal endpoint of processing route for INSPIRE catalogs via SOAP 1.2 -->
+        <endpoint id="inspireSoap12" uri="direct:inspireSoap12"/>
+
+        <!-- endpoint for harvester type management -->
+        <endpoint id="mgmtHarvesterTypes" uri="servlet:///mgmt/harvester-types"/>
+
+        <!-- endpoint for harvester nrw csw catalog -->
+        <endpoint id="cswHarvesters" uri="servlet:///gp-csw?matchOnUriPrefix=true"/>
+        <endpoint id="cswIds" uri="servlet:///gp-csw/listIdentifiers?matchOnUriPrefix=true"/>
+        <endpoint id="cswRecords" uri="servlet:///gp-csw/listRecords?matchOnUriPrefix=true"/>
+        <endpoint id="cswRecord" uri="servlet:///gp-csw/getRecord?matchOnUriPrefix=true"/>
+
+        <!-- endpoint for harvester nrw ckan catalog -->
+        <endpoint id="ckanHarvesters" uri="servlet:///gp-ckan?matchOnUriPrefix=true"/>
+        <endpoint id="ckanIds" uri="servlet:///gp-ckan/listIdentifiers?matchOnUriPrefix=true"/>
+        <endpoint id="ckanRecords" uri="servlet:///gp-ckan/listRecords?matchOnUriPrefix=true"/>
+        <endpoint id="ckanRecord" uri="servlet:///gp-ckan/getRecord?matchOnUriPrefix=true"/>
+
+        <!-- endpoint for harvester nrw ckan catalog Dataset-->
+        <endpoint id="http4test" uri="servlet:///http4test?matchOnUriPrefix=true"/>
+        <endpoint id="http4test1" uri="servlet:///http4test1?matchOnUriPrefix=true"/>
+
+        <onException>
+            <exception>java.lang.Exception</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <log loggingLevel="ERROR" message="${exception.stacktrace}" logName="error"/>
+            <setBody>
+                <constant>&lt;error&gt;Internal error, please check the log files&lt;/error&gt;</constant>
+            </setBody>
+            <setHeader headerName="CamelHttpResponseCode">
+                <constant>500</constant>
+            </setHeader>
+        </onException>
+
+        <!-- route for INSPIRE catalogs -->
+        <route>
+            <from ref="inspire"/>
+            <setHeader headerName="response_date">
+                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
+            </setHeader>
+            <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->
+            <setBody>
+                <constant>&lt;dummy/&gt;</constant>
+            </setBody>
+            <to uri="xslt:inspireRequest.xsl"/>
+            <to uri="log:input"/>
+            <choice>
+                <when>
+                    <!-- Only send a GetRecords request to the target catalog if we have not already created an OAI-PMH response -->
+                    <xpath>count(/oai:OAI-PMH) = 0</xpath>
+                    <setHeader headerName="CamelHttpMethod">
+                        <constant>POST</constant>
+                    </setHeader>
+                    <choice>
+                        <when>
+                            <simple>${header.soapVersion} == '1.1'</simple>
+                            <setHeader headerName="Content-Type">
+                                <constant>text/xml</constant>
+                            </setHeader>
+                        </when>
+                        <when>
+                            <simple>${header.soapVersion} == '1.2'</simple>
+                            <setHeader headerName="Content-Type">
+                                <constant>application/soap+xml</constant>
+                            </setHeader>
+                        </when>
+                        <otherwise>
+                            <setHeader headerName="Content-Type">
+                                <constant>application/xml</constant>
+                            </setHeader>
+                        </otherwise>
+                    </choice>
+                    <!-- Replaced dynamically with the target catalog URL -->
+                    <to uri="http://dummy?httpClient.soTimeout=180000"/>
+                    <!-- transform the GetRecordsResponse -->
+                    <choice>
+                        <when>
+                            <simple>${header.out} == null</simple>
+                            <to uri="xslt:inspireResponse.xsl"/>
+                        </when>
+                        <when>
+                            <simple>${header.out} != 'csw'</simple>
+                            <to uri="xslt:inspireResponse.xsl"/>
+                        </when>
+                    </choice>
+                </when>
+            </choice>
+            <setHeader headerName="Content-Type">
+                <constant>text/xml</constant>
+            </setHeader>
+        </route>
+
+        <!-- route for INSPIRE catalogs via SOAP 1.1 -->
+        <route>
+            <from ref="inspireSoap11"/>
+            <setHeader headerName="soapVersion">
+                <simple>1.1</simple>
+            </setHeader>
+            <setHeader headerName="SOAPAction">
+                <constant>http://www.opengis.net/cat/csw/2.0.2/requests#GetRecords</constant>
+            </setHeader>
+            <to ref="inspire"/>
+        </route>
+
+        <!-- route for INSPIRE catalogs via SOAP 1.2 -->
+        <route>
+            <from ref="inspireSoap12"/>
+            <setHeader headerName="soapVersion">
+                <simple>1.2</simple>
+            </setHeader>
+            <setHeader headerName="SOAPAction">
+                <constant>http://www.opengis.net/cat/csw/2.0.2/requests#GetRecords</constant>
+            </setHeader>
+            <to ref="inspire"/>
+        </route>
+
+        <!-- management route for harvester types -->
+        <route>
+            <from ref="mgmtHarvesterTypes"/>
+            <setBody>
+                <simple>resource:classpath:/harvester-types.xml</simple>
+            </setBody>
+            <setHeader headerName="Content-Type">
+                <constant>text/xml</constant>
+            </setHeader>
+        </route>
+
+        <!-- generic route for nrw csw harvesters -->
+        <route>
+            <from ref="csw"/>
+            <setHeader headerName="CamelHttpUri">
+                <simple>${db.item.csw.URL}</simple>
+            </setHeader>
+            <setHeader headerName="CamelHttpPath">
+                <constant/>
+            </setHeader>
+            <choice>
+                <when>
+                    <simple>${header.metadataPrefix} == null</simple>
+                    <setHeader headerName="metadataPrefix">
+                        <simple>dcat_ap</simple>
+                    </setHeader>
+                </when>
+            </choice>
+            <recipientList>
+                <simple>${db.item.csw.TYPE}</simple>
+            </recipientList>
+        </route>
+
+        <route>
+            <from ref="cswHarvesters"/>
+            <to ref="csw"/>
+        </route>
+
+        <route>
+            <from ref="cswIds"/>
+            <setHeader headerName="verb">
+                <simple>ListIdentifiers</simple>
+            </setHeader>
+            <to ref="csw"/>
+        </route>
+
+        <route>
+            <from ref="cswRecords"/>
+            <setHeader headerName="verb">
+                <simple>ListRecords</simple>
+            </setHeader>
+            <to ref="csw"/>
+        </route>
+
+        <route>
+            <from ref="cswRecord"/>
+            <setHeader headerName="verb">
+                <simple>GetRecord</simple>
+            </setHeader>
+            <to ref="csw"/>
+        </route>
+
+        <!-- route for CKAN catalogs -->
+        <route>
+            <from ref="ckan"/>
+            <setHeader headerName="response_date">
+                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
+            </setHeader>
+            <choice>
+                <when>
+                    <simple>${header.metadataPrefix} == null</simple>
+                    <setHeader headerName="metadataPrefix">
+                        <simple>euro_dcat_ap</simple>
+                    </setHeader>
+                </when>
+            </choice>
+            <setBody>
+                <constant>&lt;dummy/&gt;</constant>
+            </setBody>
+            <to uri="xslt:ckanRequest.xsl"/>
+            <to uri="log:input"/>
+
+            <choice>
+                <when>
+                    <!-- Only send a GetRecords request to the target catalog if we have not already created an OAI-PMH response -->
+                    <xpath>count(/oai:OAI-PMH) = 0</xpath>
+                    <setHeader headerName="CamelHttpMethod">
+                        <constant>GET</constant>
+                    </setHeader>
+                    <setHeader headerName="CamelHttpPath">
+                        <constant/>
+                    </setHeader>
+                    <setHeader headerName="CamelHttpUri">
+                        <xpath>/parameters/parameter[name='httpUri']/value/text()</xpath>
+                    </setHeader>
+                    <setHeader headerName="CamelHttpQuery">
+                        <xpath>/parameters/parameter[name='httpQuery']/value/text()</xpath>
+                    </setHeader>
+                    <setBody>
+                        <constant>&lt;dummy/&gt;</constant>
+                    </setBody>
+
+                    <!--<removeHeader headerName="verb"/>-->
+                    <!--<removeHeader headerName="from"/>-->
+                    <!--<removeHeader headerName="until"/>-->
+                    <!--<removeHeader headerName="identifier"/>-->
+                    <!--<removeHeader headerName="metadataPrefix"/>-->
+                    <!--<removeHeader headerName="resumptionToken"/>-->
+
+                    <!-- Replaced dynamically with the target catalog URL -->
+                    <to uri="http://dummy?httpClient.soTimeout=180000"/>
+                    <!-- transform the csw -->
+                    <choice>
+                        <when>
+                            <simple>${header.out} == null</simple>
+                            <to uri="xslt:ckanResponse.xsl"/>
+                        </when>
+                        <when>
+                            <simple>${header.out} != 'dcat'</simple>
+                            <to uri="xslt:ckanResponse.xsl"/>
+                        </when>
+                    </choice>
+                </when>
+            </choice>
+            <setHeader headerName="Content-Type">
+                <constant>text/xml</constant>
+            </setHeader>
+        </route>
+
+        <!-- generic route for nrw ckan harvesters -->
+        <route>
+            <from ref="ckanHarvesters"/>
+            <to ref="ckan"/>
+        </route>
+
+        <route>
+            <from ref="ckanIds"/>
+            <setHeader headerName="verb">
+                <simple>ListIdentifiers</simple>
+            </setHeader>
+            <to ref="ckan"/>
+        </route>
+
+        <route>
+            <from ref="ckanRecords"/>
+            <setHeader headerName="verb">
+                <simple>ListRecords</simple>
+            </setHeader>
+            <to ref="ckan"/>
+        </route>
+
+        <route>
+            <from ref="ckanRecord"/>
+            <setHeader headerName="verb">
+                <simple>GetRecord</simple>
+            </setHeader>
+            <to ref="ckan"/>
+        </route>
+
+        <route>
+            <from ref="http4test"/>
+            <setHeader headerName="response_date">
+                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
+            </setHeader>
+            <setHeader headerName="CamelHttpUri">
+                <!--<constant>http://conterra.de</constant>-->
+                <constant>${db.item.ckan.URL}/catalog.xml</constant>
+            </setHeader>
+            <to uri="http4://www.conterra.de"/>
+            <setHeader headerName="Content-Type">
+                <constant>text/xml</constant>
+            </setHeader>
+        </route>
+
+        <route>
+            <from ref="http4test1"/>
+            <setHeader headerName="response_date">
+                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
+            </setHeader>
+            <setHeader headerName="CamelHttpUri">
+                <constant>${db.item.ckan.URL}/dataset/d04a7b1e-3e60-4591-b04c-94912ac54afe.xml</constant>
+            </setHeader>
+            <to uri="http4://www.conterra.de"/>
+            <setHeader headerName="Content-Type">
+                <constant>text/xml</constant>
+            </setHeader>
+        </route>
+    </camelContext>
+</beans>
