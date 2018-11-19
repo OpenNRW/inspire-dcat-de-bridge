@@ -1,4 +1,4 @@
-# open.nrw-fassaden (Version: 0.9.0-SNAPSHOT)
+# open.nrw-fassaden (Version: 1.0.0-SNAPSHOT)
 Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal and vice versa.
 
 ##### Overview
