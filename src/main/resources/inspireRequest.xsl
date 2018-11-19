@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- transforms an OAI-PMH request to a GetRecords request or directly to a response, if possible (e.g. errors) -->
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:ogc="http://www.opengis.net/ogc"
                 xmlns:csw="http://www.opengis.net/cat/csw/2.0.2"
         exclude-result-prefixes="ogc csw">
@@ -76,7 +76,7 @@
 
     <xsl:template name="getRecord">
         <xsl:choose>
-            <xsl:when test="$metadataPrefix != $prefix_eurodcat and $metadataPrefix != $prefix_dcat and $metadataPrefix != $prefix_geodcat and $metadataPrefix != $prefix_oai">
+            <xsl:when test="$metadataPrefix != $prefix_eurodcat and $metadataPrefix != $prefix_dcat and $metadataPrefix != $prefix_oai and $metadataPrefix != $prefix_iso19139 and $metadataPrefix != $prefix_geodcat">
                 <xsl:call-template name="error">
                     <xsl:with-param name="errorCode">badArgument</xsl:with-param>
                     <xsl:with-param name="errorMessage">Bad argument: metadataPrefix</xsl:with-param>

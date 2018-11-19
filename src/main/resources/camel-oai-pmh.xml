@@ -11,17 +11,13 @@
     <!-- spring property placeholder -->
     <context:property-placeholder location="classpath:camel-oai-pmh.properties"/>
 
-    <!-- Sets parameters in URL template for for OpenSearch requests -->
-    <bean id="osParameterProcessor" class="eu.odp.harvest.geo.oai.OsParameterProcessor"/>
-
-    <!--management bean used for CRUD operations on harvesters-->
-    <bean id="harvesterManager" class="eu.odp.harvest.geo.oai.HarvesterManager">
-        <property name="harvesterBaseUrl" value="${harvester.base.url}"/>
-    </bean>
-
     <!-- This configures HttpClient to trust all server certificates - there are several catalogs that use self-signed
      certificates. Remove this bean from the configuration if you require trusted HTTPS connections! -->
     <bean id="httpClientConfigurer" class="eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig"/>
+
+<!--    <bean id="uriResolverFactory" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolverFactory"/> -->
+    <bean id="uriResolver" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolver"/>
+
 
     <!-- Camel context for this application -->
     <camelContext xmlns="http://camel.apache.org/schema/spring" xmlns:oai="http://www.openarchives.org/OAI/2.0/">
@@ -51,10 +47,6 @@
         <endpoint id="ckanRecords" uri="servlet:///gp-ckan/listRecords?matchOnUriPrefix=true"/>
         <endpoint id="ckanRecord" uri="servlet:///gp-ckan/getRecord?matchOnUriPrefix=true"/>
 
-        <!-- endpoint for harvester nrw ckan catalog Dataset-->
-        <endpoint id="http4test" uri="servlet:///http4test?matchOnUriPrefix=true"/>
-        <endpoint id="http4test1" uri="servlet:///http4test1?matchOnUriPrefix=true"/>
-
         <onException>
             <exception>java.lang.Exception</exception>
             <handled>
@@ -64,6 +56,7 @@
             <setBody>
                 <constant>&lt;error&gt;Internal error, please check the log files&lt;/error&gt;</constant>
             </setBody>
+            <removeHeaders pattern="*"/>
             <setHeader headerName="CamelHttpResponseCode">
                 <constant>500</constant>
             </setHeader>
@@ -213,7 +206,6 @@
             <to ref="csw"/>
         </route>
 
-        <!-- route for CKAN catalogs -->
         <route>
             <from ref="ckan"/>
             <setHeader headerName="response_date">
@@ -223,14 +215,14 @@
                 <when>
                     <simple>${header.metadataPrefix} == null</simple>
                     <setHeader headerName="metadataPrefix">
-                        <simple>euro_dcat_ap</simple>
+                        <simple>iso19139</simple>
                     </setHeader>
                 </when>
             </choice>
             <setBody>
                 <constant>&lt;dummy/&gt;</constant>
             </setBody>
-            <to uri="xslt:ckanRequest.xsl"/>
+            <to uri="xslt:jsonPackageRequest.xsl"/>
             <to uri="log:input"/>
 
             <choice>
@@ -249,9 +241,6 @@
                     <setHeader headerName="CamelHttpQuery">
                         <xpath>/parameters/parameter[name='httpQuery']/value/text()</xpath>
                     </setHeader>
-                    <setBody>
-                        <constant>&lt;dummy/&gt;</constant>
-                    </setBody>
 
                     <!--<removeHeader headerName="verb"/>-->
                     <!--<removeHeader headerName="from"/>-->
@@ -263,18 +252,22 @@
                     <!-- Replaced dynamically with the target catalog URL -->
                     <to uri="http://dummy?httpClient.soTimeout=180000"/>
                     <!-- transform the csw -->
+                    <convertBodyTo type="java.lang.String"/>
+                    <setHeader headerName="json">
+                        <simple>${body}</simple>
+                    </setHeader>
+                    <setBody>
+                        <constant>&lt;dummy/&gt;</constant>
+                    </setBody>
                     <choice>
                         <when>
-                            <simple>${header.out} == null</simple>
-                            <to uri="xslt:ckanResponse.xsl"/>
-                        </when>
-                        <when>
-                            <simple>${header.out} != 'dcat'</simple>
-                            <to uri="xslt:ckanResponse.xsl"/>
+                            <simple>${header.out} == null || ${header.out} != 'dcat'</simple>
+                            <to uri="xslt:jsonPackageResponse.xsl?uriResolver=uriResolver"/>
                         </when>
                     </choice>
                 </when>
             </choice>
+            <removeHeaders pattern="*"/>
             <setHeader headerName="Content-Type">
                 <constant>text/xml</constant>
             </setHeader>
@@ -308,35 +301,6 @@
                 <simple>GetRecord</simple>
             </setHeader>
             <to ref="ckan"/>
-        </route>
-
-        <route>
-            <from ref="http4test"/>
-            <setHeader headerName="response_date">
-                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
-            </setHeader>
-            <setHeader headerName="CamelHttpUri">
-                <!--<constant>http://conterra.de</constant>-->
-                <constant>${db.item.ckan.URL}/catalog.xml</constant>
-            </setHeader>
-            <to uri="http4://www.conterra.de"/>
-            <setHeader headerName="Content-Type">
-                <constant>text/xml</constant>
-            </setHeader>
-        </route>
-
-        <route>
-            <from ref="http4test1"/>
-            <setHeader headerName="response_date">
-                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
-            </setHeader>
-            <setHeader headerName="CamelHttpUri">
-                <constant>${db.item.ckan.URL}/dataset/d04a7b1e-3e60-4591-b04c-94912ac54afe.xml</constant>
-            </setHeader>
-            <to uri="http4://www.conterra.de"/>
-            <setHeader headerName="Content-Type">
-                <constant>text/xml</constant>
-            </setHeader>
         </route>
     </camelContext>
 </beans>

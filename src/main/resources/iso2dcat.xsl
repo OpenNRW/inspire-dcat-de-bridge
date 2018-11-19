@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xmlns:gml="http://www.opengis.net/gml"
                 xmlns:gmd="http://www.isotc211.org/2005/gmd"
@@ -25,6 +25,7 @@
                 xmlns:dcatde="http://dcat-ap.de/def/dcatde/1_0/"
                 xmlns:adms="http://www.w3.org/ns/adms#"
                 xmlns:org="http://www.w3.org/ns/org#"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 exclude-result-prefixes="gmd gco srv xlink gmi">
 
     <xsl:output method="xml"/>
@@ -116,7 +117,7 @@
                     </xsl:if>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:topicCategory/*" mode="openNRW"/>
+                    <xsl:call-template name="topicOpenNRW"/>
                 </xsl:otherwise>
             </xsl:choose>
 
@@ -339,8 +340,9 @@
     </xsl:template>
 
     <xsl:template
-            match="gmd:dateStamp/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]">
-        <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        match="gmd:dateStamp/*[text() castable as xs:date or text() castable as xs:dateTime]">
+        <dct:modified>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:modified>
     </xsl:template>
@@ -461,11 +463,11 @@
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement">
-        <xsl:if test="gmd:EX_GeographicBoundingBox or $openNRW!='true'">
+        <xsl:if test="gmd:EX_GeographicBoundingBox[string(gmd:southBoundLatitude/*) != string(gmd:northBoundLatitude/*) and string(gmd:westBoundLongitude/*) != string(gmd:eastBoundLongitude/*)] or $openNRW!='true'">
             <dct:spatial>
                 <dct:Location>
                     <xsl:apply-templates select="../gmd:description/gco:CharacterString"/>
-                    <xsl:apply-templates select="gmd:EX_GeographicBoundingBox"/>
+                    <xsl:apply-templates select="gmd:EX_GeographicBoundingBox[string(gmd:southBoundLatitude/*) != string(gmd:northBoundLatitude/*) and string(gmd:westBoundLongitude/*) != string(gmd:eastBoundLongitude/*)]"/>
                     <xsl:if test="$openNRW!='true'">
                         <xsl:apply-templates select="gmd:EX_GeographicDescription"/>
                     </xsl:if>
@@ -577,73 +579,92 @@
     </xsl:template>
 
     <xsl:template
-            match="gml:beginPosition[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]">
-        <schema:startDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        match="gml:beginPosition[text() castable as xs:date or text() castable as xs:dateTime]">
+        <schema:startDate>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </schema:startDate>
     </xsl:template>
 
     <xsl:template
-            match="gml:endPosition[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]">
-        <schema:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        match="gml:endPosition[text() castable as xs:date or text() castable as xs:dateTime]">
+        <schema:endDate>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </schema:endDate>
     </xsl:template>
 
     <xsl:template
-            match="gmd:date/*[gmd:dateType/*/@codeListValue='publication']/gmd:date/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]">
-        <dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        match="gmd:date/*[gmd:dateType/*/@codeListValue='publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
+        <dct:issued>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:issued>
     </xsl:template>
 
     <xsl:template
-            match="gmd:date/*[gmd:dateType/*/@codeListValue='revision']/gmd:date/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]">
-        <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        match="gmd:date/*[gmd:dateType/*/@codeListValue='revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
+        <dct:modified>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:modified>
     </xsl:template>
 
     <xsl:template
-            match="gmd:date/*[gmd:dateType/*/@codeListValue='creation']/gmd:date/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]">
-        <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        match="gmd:date/*[gmd:dateType/*/@codeListValue='creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
+        <dct:created>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:created>
     </xsl:template>
-
+    
+    <xsl:template name="dateType">
+        <xsl:if test="text() castable as xs:date">
+            <xsl:attribute name="rdf:datatype">http://www.w3.org/2001/XMLSchema#date</xsl:attribute>
+        </xsl:if>
+        <xsl:if test="text() castable as xs:dateTime">
+            <xsl:attribute name="rdf:datatype">http://www.w3.org/2001/XMLSchema#dateTime</xsl:attribute>
+        </xsl:if>
+    </xsl:template>
+    
     <xsl:template
-            match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]"
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
             mode="openNRW">
         <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
-            <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+            <dct:modified>
+                <xsl:call-template name="dateType"/>
                 <xsl:value-of select="."/>
             </dct:modified>
         </xsl:if>
         <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*)">
-            <dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+            <dct:issued>
+                <xsl:call-template name="dateType"/>
                 <xsl:value-of select="."/>
             </dct:issued>
         </xsl:if>
     </xsl:template>
 
     <xsl:template
-            match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]"
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
             mode="openNRW">
-        <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        <dct:modified>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:modified>
     </xsl:template>
 
     <xsl:template
-            match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[(string-length(text()) = 10 and not (contains(text(), ' '))) or ((string-length(text()) = 19 and not (contains(text(), ' ')))) or ((string-length(text()) = 20 and not (contains(text(), ' ')) and (contains(text(), 'Z'))))]"
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
             mode="openNRW">
         <xsl:if
                 test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*)">
-            <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+            <dct:modified>
+                <xsl:call-template name="dateType"/>
                 <xsl:value-of select="."/>
             </dct:modified>
         </xsl:if>
-        <dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">
+        <dct:issued>
+            <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:issued>
     </xsl:template>
@@ -934,23 +955,21 @@
     <xsl:template name="dctFormat">
         <xsl:param name="format"/>
         <xsl:param name="version" select="../srv:serviceTypeVersion/*[text()]"/>
-        <xsl:choose>
-            <xsl:when test="$version!=''">
-                <dct:format rdf:parseType="Resource">
+        <dct:format>
+            <xsl:choose>
+                <xsl:when test="starts-with($format, 'http:') or starts-with($format, 'https:')">
+                    <xsl:attribute name="rdf:resource">
+                        <xsl:value-of select="$format"/>
+                    </xsl:attribute>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:attribute name="rdf:parseType">Resource</xsl:attribute>
                     <rdfs:label>
                         <xsl:value-of select="$format"/>
                     </rdfs:label>
-                    <dct:hasVersion rdf:parseType="Resource">
-                        <vcard:hasValue rdf:resource="{$version}"/>
-                    </dct:hasVersion>
-                </dct:format>
-            </xsl:when>
-            <xsl:otherwise>
-                <dct:format>
-                    <xsl:value-of select="$format"/>
-                </dct:format>
-            </xsl:otherwise>
-        </xsl:choose>
+                </xsl:otherwise>
+            </xsl:choose>
+        </dct:format>
     </xsl:template>
 
     <xsl:template name="dataDistributionNRW">
@@ -984,28 +1003,6 @@
         </dcat:distribution>
     </xsl:template>
     
-<!--
-    <xsl:template match="gmd:CI_OnlineResource[gmd:function/*/@codeListValue = 'download' or gmd:function/*/@codeListValue = 'offlineAccess' or gmd:function/*/@codeListValue = 'order']">
-    <dcat:distribution>
-    <dcat:Distribution>
-    <xsl:apply-templates select="gmd:name/gco:CharacterString[text()]"/>
-    <xsl:apply-templates select="gmd:description/gco:CharacterString[text()]"/>
-    <xsl:apply-templates select="gmd:linkage/*"/>
-    <xsl:variable name="distributorFormat" select="../../../../gmd:distributorFormat/*/gmd:name/gco:CharacterString[text()]"/>
-    <xsl:choose>
-    <xsl:when test="$distributorFormat">
-    <xsl:apply-templates select="$distributorFormat"/>
-    </xsl:when>
-    <xsl:otherwise>
-    <xsl:apply-templates select="ancestor::gmd:distributionInfo/*/gmd:distributionFormat[1]/*/gmd:name/gco:CharacterString[text()]"/>
-    </xsl:otherwise>
-    </xsl:choose>
-    <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue"/>
-    <xsl:call-template name="constraints"/>
-    </dcat:Distribution>
-    </dcat:distribution>
-    </xsl:template>
--->
     <xsl:template match="gmd:CI_OnlineResource[gmd:function/*/@codeListValue = 'information' or gmd:function/*/@codeListValue = 'search']">
         <foaf:page>
             <xsl:call-template name="foafDocument"/>
@@ -1041,11 +1038,11 @@
         <xsl:apply-templates select="../gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString" mode="param"/>
     </xsl:template>
 
-    <xsl:template match="gmd:CI_OnlineResource[not(gmd:function/*/@codeListValue = 'download')]/gmd:linkage/*|gmd:citation/*/gmd:identifier/*/gmd:code/*">
+    <xsl:template match="gmd:transferOptions/*/gmd:onLine/gmd:CI_OnlineResource[not(gmd:function/*/@codeListValue = 'download')]/gmd:linkage/*|gmd:citation/*/gmd:identifier/*/gmd:code/*">
         <dcat:accessURL rdf:resource="{.}"/>
     </xsl:template>
 
-    <xsl:template match="gmd:CI_OnlineResource[gmd:function/*/@codeListValue = 'download']/gmd:linkage/*">
+    <xsl:template match="gmd:transferOptions/*/gmd:onLine/gmd:CI_OnlineResource[gmd:function/*/@codeListValue = 'download']/gmd:linkage/*">
         <dcat:downloadURL rdf:resource="{.}"/>
     </xsl:template>
 
@@ -1128,32 +1125,7 @@
             </xsl:if>
         </xsl:if>
     </xsl:template>
-<!--
-    <xsl:template match="gmd:MD_RestrictionCode[@codeListValue!=$c_other_restrictions]" mode="accessRights">
-        <dct:accessRights>
-            <xsl:choose>
-                <xsl:when test="$openNRW!='true' or (@codeListValue!=$c_license and ../../gmd:accessConstraints/*/@codeListValue!=$c_license)">
-                    <xsl:call-template name="rightsStatement">
-                        <xsl:with-param name="value" select="@codeListValue"/>
-                    </xsl:call-template>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:apply-templates select="../../gmd:otherConstraints/*"/>
-                </xsl:otherwise>
-            </xsl:choose>
-        </dct:accessRights>
-    </xsl:template>
 
-    <xsl:template match="gmd:MD_RestrictionCode[@codeListValue=$c_other_restrictions]" mode="accessRights"/>
-
-    <xsl:template match="gmd:resourceConstraints/*/gmd:accessConstraints/*[@codeListValue!=$c_license and @codeListValue!=$c_other_restrictions]/@codeListValue">
-        <dct:rights>
-            <xsl:call-template name="rightsStatement">
-                <xsl:with-param name="value" select="."/>
-            </xsl:call-template>
-        </dct:rights>
-    </xsl:template>
--->
     <xsl:template name="rightsStatement">
         <xsl:param name="value"/>
         <dct:RightsStatement>
@@ -1456,54 +1428,42 @@
         <dct:accrualPeriodicity rdf:resource="{concat('http://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequencyCode/', .)}"/>
     </xsl:template>
 
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='farming']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/AGRI"/>
+    <xsl:template name="topicOpenNRW">
+        <xsl:variable name="topicCategories" select="gmd:identificationInfo[1]/*/gmd:topicCategory/*"/>
+        <xsl:if test="$topicCategories[.='farming']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/AGRI"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='biota' or .='climatologyMeteorologyAtmosphere' or
+            .='elevation' or .='environment' or .='imageryBaseMapsEarthCover' or .='inlandWaters' or .='oceans'
+            or .='geoscientificInformation']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENVI"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='boundaries' or .='location' or .='planningCadastre' or .='geoscientificInformation']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/REGI"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='economy']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ECON"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='health']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/HEAL"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='intelligenceMilitary' or .='society']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/JUST"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='society']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/SOCI"/>
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/EDUC"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='transportation']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TRAN"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='utilitiesCommunication']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENER"/>
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/INTR"/>
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/GOVE"/>
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TECH"/>
+        </xsl:if>
     </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='biota' or .='climatologyMeteorologyAtmosphere' or
-     .='elevation' or .='environment' or .='imageryBaseMapsEarthCover' or .='inlandWaters' or .='oceans']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENVI"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='boundaries' or .='location' or .='planningCadastre']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/REGI"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='economy']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ECON"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='geoscientificInformation']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENVI"/>
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/REGI"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='health']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/HEAL"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='intelligenceMilitary']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/JUST"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='society']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/SOCI"/>
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/EDUC"/>
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/JUST"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='transportation']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TRAN"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode[.='utilitiesCommunication']" mode="openNRW">
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENER"/>
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/INTR"/>
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/GOVE"/>
-        <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TECH"/>
-    </xsl:template>
-
-    <xsl:template match="gmd:MD_TopicCategoryCode" mode="openNRW"/>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:topicCategory/*" mode="dcatTheme">
         <xsl:param name="ckanTheme" select="''"/>
