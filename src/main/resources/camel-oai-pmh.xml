@@ -15,9 +15,7 @@
      certificates. Remove this bean from the configuration if you require trusted HTTPS connections! -->
     <bean id="httpClientConfigurer" class="eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig"/>
 
-<!--    <bean id="uriResolverFactory" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolverFactory"/> -->
-    <bean id="uriResolver" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolver"/>
-
+    <bean id="uriResolverFactory" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolverFactory"/>
 
     <!-- Camel context for this application -->
     <camelContext xmlns="http://camel.apache.org/schema/spring" xmlns:oai="http://www.openarchives.org/OAI/2.0/">
@@ -262,7 +260,7 @@
                     <choice>
                         <when>
                             <simple>${header.out} == null || ${header.out} != 'dcat'</simple>
-                            <to uri="xslt:jsonPackageResponse.xsl?uriResolver=uriResolver"/>
+                            <to uri="xslt:jsonPackageResponse.xsl?uriResolverFactory=uriResolverFactory"/>
                         </when>
                     </choice>
                 </when>
