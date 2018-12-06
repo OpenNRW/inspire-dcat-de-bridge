@@ -3,8 +3,8 @@
     <groupId>de.conterra.eu.odp</groupId>
     <artifactId>oai-pmh-geo-harvest</artifactId>
     <packaging>war</packaging>
-    <name>EU ODP Geo-Harvesting via OAI-PMH</name>
-    <version>1.0.1-SNAPSHOT</version>
+    <name>GeoDCAT-AP.de Geo-Harvesting via OAI-PMH</name>
+    <version>1.0.2</version>
     <description>This is the web application of the harvest service</description>
     <!-- core developers ======================================================= -->
     <developers>

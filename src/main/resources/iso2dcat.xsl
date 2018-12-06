@@ -290,11 +290,8 @@
 
     <xsl:template match="gmd:CI_Citation" mode="conformsTo"/>
 
-    <xsl:template match="gmd:CI_Citation[../../gmd:pass/gco:Boolean = 'true']" mode="conformsTo">
-        <dct:conformsTo>
-            <xsl:apply-templates select="." mode="specinfo"/>
-        </dct:conformsTo>
-    </xsl:template>
+    <!-- as we do not have the license URI at this point, no mapping -->
+    <xsl:template match="gmd:CI_Citation[../../gmd:pass/gco:Boolean = 'true']" mode="conformsTo"/>
 
     <xsl:template match="gmd:specification/gmd:CI_Citation[not(../@xlink:href) or ../@xlink:href = '']" mode="specinfo">
         <xsl:attribute name="rdf:parseType">Resource</xsl:attribute>
@@ -520,11 +517,7 @@
         </rdfs:seeAlso>
     </xsl:template>
 
-    <xsl:template match="gmd:geographicElement/gmd:EX_GeographicDescription[gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code]" mode="openNRW">
-        <dcatde:politicalGeocodingLevelURI>
-            <xsl:value-of select="gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString"/>
-        </dcatde:politicalGeocodingLevelURI>
-    </xsl:template>
+    <xsl:template match="gmd:geographicElement/gmd:EX_GeographicDescription[gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code]" mode="openNRW"/>
 
     <xsl:template match="gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString">
         <skos:prefLabel>
@@ -1078,16 +1071,36 @@
     </xsl:template>
 
     <xsl:template match="gmd:useLimitation/gco:CharacterString|gmd:otherConstraints/gco:CharacterString" mode="license">
-        <dct:LicenseDocument>
+        <xsl:variable name="licenseUri">
             <xsl:call-template name="jsonLicenseToUrl"/>
-            <rdfs:label>
-                <xsl:call-template name="xmlLang"/>
-                <xsl:value-of select="."/>
-            </rdfs:label>
-            <xsl:apply-templates select="../gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString" mode="param">
-                <xsl:with-param name="mode" select="'label'"/>
-            </xsl:apply-templates>
-        </dct:LicenseDocument>
+<!--
+            <xsl:if test="starts-with(normalize-space(.), '{')">
+                <xsl:variable name="jsonWithId" select="substring-after(., '&quot;id&quot;')"/>
+                <xsl:variable name="licenseId" select="substring-before(substring-after($jsonWithId, '&quot;'), '&quot;')"/>
+                <xsl:if test="$licenseId != ''">
+                    <xsl:value-of select="concat('http://dcat-ap.de/def/licenses/', $licenseId)"/>
+                </xsl:if>
+            </xsl:if>
+-->
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$licenseUri != ''">
+                <xsl:attribute name="rdf:resource">
+                    <xsl:value-of select="$licenseUri"/>
+                </xsl:attribute>
+            </xsl:when>
+            <xsl:otherwise>
+                <dct:LicenseDocument>
+                    <rdfs:label>
+                        <xsl:call-template name="xmlLang"/>
+                        <xsl:value-of select="."/>
+                    </rdfs:label>
+                    <xsl:apply-templates select="../gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString" mode="param">
+                        <xsl:with-param name="mode" select="'label'"/>
+                    </xsl:apply-templates>
+                </dct:LicenseDocument>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template match="gmd:useLimitation/gmx:Anchor|gmd:otherConstraints/gmx:Anchor" mode="license">
@@ -1116,13 +1129,35 @@
     
     <xsl:template name="jsonLicenseToUrl">
         <xsl:if test="starts-with(normalize-space(.), '{')">
-            <xsl:variable name="jsonWithUrl" select="substring-after(., '&quot;url&quot;')"/>
-            <xsl:variable name="url" select="substring-before(substring-after($jsonWithUrl, '&quot;'), '&quot;')"/>
-            <xsl:if test="$url">
-                <xsl:attribute name="rdf:about">
-                    <xsl:value-of select="$url"/>
-                </xsl:attribute>
+            <xsl:variable name="jsonWithId" select="substring-after(., '&quot;id&quot;')"/>
+            <xsl:variable name="licenseId" select="substring-before(substring-after($jsonWithId, '&quot;'), '&quot;')"/>
+            <xsl:value-of select="'http://dcat-ap.de/def/licenses/'"/>
+            <xsl:choose>
+                <xsl:when test="$licenseId = 'cc-by-4.0'">cc-by/4.0</xsl:when>
+                <xsl:when test="$licenseId = 'dl-de-by-2.0'">dl-by-de/2.0</xsl:when>
+                <xsl:when test="$licenseId = 'cc-by-nd-4.0'">cc-by-nd/4.0</xsl:when>
+                <!-- from here on the mapping is unconfirmed -->
+                <xsl:when test="$licenseId = 'cc-by-de-3.0'">cc-by-de/3.0</xsl:when>
+                <xsl:when test="$licenseId = 'cc-by-nc-3.0'">cc-by-nc/3.0</xsl:when>
+                <xsl:when test="$licenseId = 'cc-by-nc-4.0'">cc-by-nc/4.0</xsl:when>
+                <xsl:when test="$licenseId = 'cc-by-nd-3.0'">cc-by-nd/3.0</xsl:when>
+                <xsl:when test="$licenseId = 'cc-by-sa-4.0'">cc-by-sa/4.0</xsl:when>
+                <xsl:when test="$licenseId = 'ccpdm-1.0'">ccpdm/1.0</xsl:when>
+                <xsl:when test="$licenseId = 'dl-de-by-1.0'">dl-by-de/1.0</xsl:when>
+                <xsl:when test="$licenseId = 'dl-by-nc-de-1.0'">dl-by-nc-de/1.0</xsl:when>
+                <xsl:when test="$licenseId = 'dl-zero-de/2.0'">dl-zero-de/2.0</xsl:when>
+                <xsl:when test="$licenseId = 'geoNutz-20130319'">geoNutz/20130319</xsl:when>
+                <xsl:when test="$licenseId = 'geoNutz-20131001'">geoNutz/20131001</xsl:when>
+                <xsl:when test="$licenseId = 'gpl-3.0'">gpl/3.0</xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$licenseId"/>
+                </xsl:otherwise>
+            </xsl:choose>
+<!--
+            <xsl:if test="$licenseId != ''">
+                <xsl:value-of select="concat('http://dcat-ap.de/def/licenses/', $licenseId)"/>
             </xsl:if>
+-->
         </xsl:if>
     </xsl:template>
 
