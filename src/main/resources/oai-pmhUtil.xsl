@@ -5,7 +5,7 @@
 
     <xsl:variable name="base_url">${oai-pmh.base.url.external}</xsl:variable>
 
-    <xsl:variable name="recordsPerPage">100</xsl:variable>
+    <xsl:variable name="recordsPerPage">50</xsl:variable>
 
     <xsl:variable name="prefix_oai">oai_dc</xsl:variable>
     <xsl:variable name="prefix_dcat">dcat_ap</xsl:variable>

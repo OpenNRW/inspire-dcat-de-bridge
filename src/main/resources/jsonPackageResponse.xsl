@@ -20,6 +20,7 @@
     <xsl:param name="soapVersion"/>
     <xsl:param name="response_date" select="current-dateTime()"/>
     <xsl:param name="json"/>
+    <xsl:param name="db.item.ckan.URL"/>
 
     <xsl:variable name="response" select="json-to-xml($json)"/>
     <xsl:variable name="total" select="number($response/j:map/j:map[@key='result']/j:number[@key = 'count'])" as="xs:double"/>
@@ -63,7 +64,7 @@
         <record xmlns="http://www.openarchives.org/OAI/2.0/">
             <xsl:apply-templates select="." mode="header"/>
             <xsl:variable name="id" select="j:string[@key='id']"/>
-            <xsl:variable name="resourceUri" select="concat('https://ckan.test.open.nrw.de/dataset/', $id, '.xml?profiles=euro_dcat_ap')"/>
+            <xsl:variable name="resourceUri" select="concat($db.item.ckan.URL, '/dataset/', $id, '.xml?profiles=euro_dcat_ap')"/>
             <metadata>
                 <xsl:variable name="dcatDoc" select="document($resourceUri)"/>
                 <xsl:choose>

@@ -160,15 +160,8 @@
         </pluginManagement>
     </build>
     <properties>
-        <camel.version>2.22.2</camel.version>
-        <spring.version>5.0.10.RELEASE</spring.version>
-<!--
-        <oai-pmh.base.url.external>http://localhost:8080/omdf</oai-pmh.base.url.external>
-        <db.item.csw.TYPE>inspire</db.item.csw.TYPE>
-        <db.item.csw.URL>http://localhost:8080/soapServices/CSWStartup</db.item.csw.URL>
-        <db.item.ckan.TYPE>ckan</db.item.ckan.TYPE>
-        <db.item.ckan.URL>http://localhost:9090</db.item.ckan.URL>
--->
+        <camel.version>2.24.0</camel.version>
+        <spring.version>5.1.6.RELEASE</spring.version>
     </properties>
     <profiles>
         <profile>

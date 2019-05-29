@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- transforms an OAI-PMH request to a GetRecords request or directly to a response, if possible (e.g. errors) -->
-<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:ogc="http://www.opengis.net/ogc"
-                xmlns:csw="http://www.opengis.net/cat/csw/2.0.2" xmlns:cdl="http://www.w3.org/1999/XSL/Transform"
-                exclude-result-prefixes="ogc csw">
+<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <xsl:import href="oai-pmhUtil.xsl"/>
 
@@ -21,7 +18,7 @@
     <xsl:param name="response_date"/>
     <xsl:param name="CamelHttpQuery"/>
 
-    <xsl:param name="db.item.ckan.URL">${db.item.ckan.URL}</xsl:param>
+    <xsl:param name="db.item.ckan.URL"/>
 
     <xsl:variable name="verb_lc">
         <xsl:call-template name="getVerb"/>

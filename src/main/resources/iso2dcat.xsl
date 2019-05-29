@@ -16,26 +16,22 @@
                 xmlns:vcard="http://www.w3.org/2006/vcard/ns#"
                 xmlns:schema="http://schema.org/"
                 xmlns:prov="http://www.w3.org/ns/prov#"
-                xmlns:wdrs="http://www.w3.org/2007/05/powder-s#"
                 xmlns:earl="http://www.w3.org/ns/earl#"
                 xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:owl="http://www.w3.org/2002/07/owl#"
                 xmlns:cnt="http://www.w3.org/2011/content#"
                 xmlns:gmi="http://www.isotc211.org/2005/gmi"
                 xmlns:dcatde="http://dcat-ap.de/def/dcatde/1_0/"
                 xmlns:adms="http://www.w3.org/ns/adms#"
                 xmlns:org="http://www.w3.org/ns/org#"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                exclude-result-prefixes="gmd gco srv xlink gmi">
+                xmlns:csw="http://www.opengis.net/cat/csw/2.0.2"
+                exclude-result-prefixes="gmd gmx gco srv xlink gmi csw">
 
     <xsl:output method="xml"/>
 
     <!--
     <xsl:strip-space elements="*"/>
     -->
-    <!--todo: ISO zu Open.NRW erforderlich-->
-    <xsl:param name="openNRW">true</xsl:param>
-
     <xsl:variable name="c_license">license</xsl:variable>
     <xsl:variable name="c_no_limitation">keine</xsl:variable>
     <xsl:variable name="c_other_restrictions">otherRestrictions</xsl:variable>
@@ -44,16 +40,26 @@
     <xsl:variable name="tokeDcatAp">:dcat_ap:</xsl:variable>
     <xsl:param name="metadataPrefix">dcat_ap</xsl:param>
     <xsl:variable name="prefixDcatAp">dcat_ap</xsl:variable>
-    <xsl:variable name="extended" select="($metadataPrefix and $metadataPrefix != $prefixDcatAp) or ($resumptionToken and not(contains($resumptionToken, $tokeDcatAp)))"/>
 
-    <xsl:variable name="inspireThemes" select="document('themes.rdf')"/>
-    <xsl:variable name="euroVocMapping" select="document('align_EuroVoc_Inspire.rdf')"/>
     <xsl:variable name="mdrFileTypes" select="document('filetypes-skos.rdf')"/>
     <xsl:variable name="ianaMediaTypes" select="document('iana-media-types.xml')"/>
     <xsl:variable name="languageCodes" select="document('languageCodes.rdf')"/>
 
     <xsl:variable name="inspire_md_codelist">http://inspire.ec.europa.eu/metadata-codelist/</xsl:variable>
 
+    <xsl:variable name="resourceIdentifiers" select="string-join(/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*, '|')"/>
+    <xsl:variable name="coupledServicesUri">
+        <xsl:value-of select="'direct:getCoupledServices'"/>
+        <xsl:if test="/soapenv:Envelope" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+            <xsl:value-of select="'Soap11'"/>
+        </xsl:if>
+        <xsl:if test="/soap12:Envelope" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+            <xsl:value-of select="'Soap11'"/>
+        </xsl:if>
+        <xsl:value-of select="concat('?', $resourceIdentifiers)"/>
+    </xsl:variable>
+    <xsl:variable name="coupledServices" select="document($coupledServicesUri)"/>
+    
     <xsl:template match="gmd:MD_Metadata|gmi:MI_Metadata">
         <dcat:Dataset>
             <!--dct:description-->
@@ -74,148 +80,73 @@
             <!--dct:spatial-->
             <!--dct:modified-->
 
-            <xsl:call-template name="commonProperties"/>
-
-            <xsl:if test="$openNRW!='true'">
-                <xsl:apply-templates select="gmd:dataQualityInfo/*/gmd:lineage/*/gmd:statement/gco:CharacterString[text()]"/>
-            </xsl:if>
-
-            <!--dcat:distribution-->
+            <!--dct:title-->
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
+            
+            <!--dct:description-->
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
+            
+            <!--dct:identifier-->
+            <xsl:apply-templates select="gmd:fileIdentifier/gco:CharacterString"/>
+            
+            <!--dct:language-->
+            <!--cnt:characterEncoding-->
             <xsl:choose>
-                <xsl:when test="$openNRW!='true'">
-                    <!-- now services are handled the same way as datasets -->
-                    <xsl:choose>
-                        <xsl:when test="gmd:hierarchyLevel/*/@codeListValue='service'">
-                            <xsl:call-template name="serviceDistribution"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:call-template name="dataDistribution"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
+                <xsl:when test="gmd:language/*[string-length(@codeListValue) = 3]|gmd:identificationInfo/*/gmd:language/gco:CharacterString[string-length(text()) = 3]">
+                    <xsl:apply-templates select="gmd:language/*[string-length(@codeListValue) = 3]|gmd:identificationInfo/*/gmd:language/gco:CharacterString[string-length(text()) = 3]"/>
+                    <xsl:apply-templates select="gmd:characterSet/*/@codeListValue"/>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:choose>
-                        <xsl:when test="gmd:hierarchyLevel/*/@codeListValue='service'">
-                            <xsl:call-template name="serviceDistribution"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:call-template name="dataDistributionNRW"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-<!--
-                    <xsl:apply-templates select="gmd:identificationInfo[1]/gmd:MD_DataIdentification" mode="distribution"/>
-                    <xsl:apply-templates select="gmd:identificationInfo[1]/srv:SV_ServiceIdentification" mode="distribution"/>
-                    <xsl:apply-templates select="gmd:distributionInfo/gmd:MD_Distribution" mode="distribution"/>
--->
+                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:language/*[string-length(@codeListValue) = 3]|gmd:identificationInfo/*/gmd:language/gco:CharacterString[string-length(text()) = 3]"/>
+                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:characterSet/*/@codeListValue|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue"/>
                 </xsl:otherwise>
             </xsl:choose>
-
+            
+            
+            <!--dct:accessRights-->
+            <xsl:variable name="accessConstraints" select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[. != $c_no_limitation]"/>
+            <xsl:apply-templates select="$accessConstraints[1]"/>
+            
+            <!--dcat:keyword-->
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:descriptiveKeywords/*/gmd:keyword/gco:CharacterString[text()]"/>
+            
+            <!--dcatde:politicalGeocodingLevelURI-->
+            <!--dcatde:politicalGeocodingURI-->
+            
+            <!--dct:spatial-->
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement"/>
+            
+            <!--dct:created dct:issued dct:modified-->
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"/>
+            
+            <!--dcat:contactPoint dct:publisher dcatde:maintainer-->
+            <xsl:variable name="pointOfContact" select="gmd:identificationInfo[1]/*/gmd:pointOfContact/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='pointOfContact']"/>
+            <xsl:variable name="publisher" select="gmd:identificationInfo[1]/*/gmd:pointOfContact/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='publisher']"/>
+            <xsl:apply-templates select="$pointOfContact | $publisher | gmd:identificationInfo[1]/*/gmd:pointOfContact/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='custodian']"/>
             <xsl:choose>
-                <xsl:when test="$openNRW!='true'">
-                    <xsl:if test="not(gmd:identificationInfo[1]/*/gmd:descriptiveKeywords/*[starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/*, 'GEMET - INSPIRE themes')]/gmd:keyword/gco:CharacterString[text()])">
-                        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:topicCategory/*" mode="dcatTheme"/>
+                <xsl:when test="count($pointOfContact) = 0">
+                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty" mode="contactPoint"/>
+                    <xsl:if test="count($publisher) = 0">
+                        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:pointOfContact[1]/gmd:CI_ResponsibleParty" mode="publisher"/>
                     </xsl:if>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:call-template name="topicOpenNRW"/>
+                    <xsl:if test="count($publisher) = 0">
+                        <xsl:apply-templates select="$pointOfContact" mode="publisher"/>
+                    </xsl:if>
                 </xsl:otherwise>
             </xsl:choose>
+            
+            
+            <xsl:apply-templates select="gmd:dataQualityInfo/*/gmd:report/*/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation"/>
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceMaintenance/*/gmd:maintenanceAndUpdateFrequency/*/@codeListValue"/>
+            <xsl:apply-templates select="gmd:hierarchyLevel"/>
+            
+            <!--dcat:distribution-->
+            <xsl:call-template name="dataDistribution"/>
 
-            <xsl:if test="$openNRW!='true'">
-                <xsl:apply-templates select="gmd:parentIdentifier/*[text()]"/>
-            </xsl:if>
-            <xsl:if test="$extended">
-                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:topicCategory/*"/>
-            </xsl:if>
+            <xsl:call-template name="topicCategory"/>
         </dcat:Dataset>
-    </xsl:template>
-
-    <xsl:template name="commonProperties">
-        <!--dct:title-->
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
-
-        <!--dct:description-->
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
-
-        <!--dct:identifier-->
-        <xsl:apply-templates select="gmd:fileIdentifier/gco:CharacterString"/>
-        <xsl:if test="$openNRW!='true'">
-            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:identifier/*/gmd:code/gco:CharacterString"/>
-        </xsl:if>
-
-        <!--dct:language-->
-        <!--cnt:characterEncoding-->
-        <xsl:choose>
-            <xsl:when test="gmd:language/*[string-length(@codeListValue) = 3]|gmd:identificationInfo/*/gmd:language/gco:CharacterString[string-length(text()) = 3]">
-                <xsl:apply-templates select="gmd:language/*[string-length(@codeListValue) = 3]|gmd:identificationInfo/*/gmd:language/gco:CharacterString[string-length(text()) = 3]"/>
-                <xsl:apply-templates select="gmd:characterSet/*/@codeListValue"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:language/*[string-length(@codeListValue) = 3]|gmd:identificationInfo/*/gmd:language/gco:CharacterString[string-length(text()) = 3]"/>
-                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:characterSet/*/@codeListValue|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue"/>
-            </xsl:otherwise>
-        </xsl:choose>
-
-
-        <!--dct:accessRights-->
-<!--
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*/gmd:useConstraints/gmd:MD_RestrictionCode" mode="accessRights"/>
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*/gmd:accessConstraints/gmd:MD_RestrictionCode" mode="accessRights"/>
--->
-        <xsl:variable name="accessConstraints" select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[. != $c_no_limitation]"/>
-        <xsl:apply-templates select="$accessConstraints[1]"/>
-        
-        <!--dcat:keyword-->
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:descriptiveKeywords/*/gmd:keyword/gco:CharacterString[text()]"/>
-
-        <!--dcatde:politicalGeocodingLevelURI-->
-        <!--dcatde:politicalGeocodingURI-->
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement/gmd:EX_GeographicDescription" mode="openNRW"/>
-
-        <!--dct:spatial-->
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement"/>
-
-        <!--<dct:temporal>-->
-        <xsl:if test="$openNRW!='true'">
-            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:temporalElement/*/gmd:extent/gml:TimePeriod[string-length(gml:beginPosition/text()) &gt; 9 or string-length(gml:endPosition/text()) &gt; 9]"/>
-            <xsl:apply-templates select="gmd:identificationInfo[1]/*/srv:extent/*/gmd:temporalElement/*/gmd:extent/gml:TimePeriod[string-length(gml:beginPosition/text()) &gt; 9 or string-length(gml:endPosition/text()) &gt; 9]"/>
-        </xsl:if>
-
-        <!--dct:created dct:issued dct:modified-->
-        <xsl:choose>
-            <xsl:when test="$openNRW!='true'">
-                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"
-                                     mode="openNRW"/>
-            </xsl:otherwise>
-        </xsl:choose>
-
-        <!--dcat:contactPoint dct:publisher dct:creator dct:rightsHolder dcatde:maintainer-->
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:citedResponsibleParty/gmd:CI_ResponsibleParty"/>
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:pointOfContact/gmd:CI_ResponsibleParty"/>
-
-        <xsl:apply-templates select="gmd:dataQualityInfo/*/gmd:report/*/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation"/>
-        <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceMaintenance/*/gmd:maintenanceAndUpdateFrequency/*/@codeListValue"/>
-        <xsl:apply-templates select="gmd:hierarchyLevel"/>
-
-        <xsl:if test="$openNRW!='true'">
-            <xsl:if test="$extended">
-                <foaf:isPrimaryTopicOf>
-                    <rdf:Description>
-                        <rdf:type rdf:resource="http://www.w3.org/ns/dcat#CatalogRecord"/>
-                        <xsl:apply-templates select="gmd:language/*[@codeListValue]|gmd:language/gco:CharacterString"/>
-                        <xsl:apply-templates select="gmd:dateStamp/*"/>
-                        <xsl:apply-templates select="gmd:contact/*[gmd:organisationName]"/>
-                        <xsl:apply-templates select="gmd:contact/*[gmd:organisationName]" mode="qualifiedAttribution"/>
-                        <xsl:apply-templates select="gmd:fileIdentifier/gco:CharacterString"/>
-                        <xsl:apply-templates select="gmd:metadataStandardName/gco:CharacterString"/>
-                    </rdf:Description>
-                </foaf:isPrimaryTopicOf>
-                <xsl:apply-templates select="gmd:contact/*[gmd:organisationName]" mode="qualifiedAttribution"/>
-            </xsl:if>
-        </xsl:if>
     </xsl:template>
 
     <xsl:template match="gmd:fileIdentifier/*">
@@ -227,57 +158,7 @@
         </dct:identifier>
     </xsl:template>
 
-    <xsl:template match="gmd:metadataStandardName/gco:CharacterString">
-        <dct:source rdf:parseType="Resource">
-            <dct:conformsTo rdf:parseType="Resource">
-                <dct:title>
-                    <xsl:call-template name="xmlLang"/>
-                    <xsl:value-of select="."/>
-                </dct:title>
-                <xsl:apply-templates select="../../gmd:metadataStandardVersion/*"/>
-            </dct:conformsTo>
-        </dct:source>
-    </xsl:template>
-
-    <xsl:template match="gmd:metadataStandardName/gmx:Anchor">
-        <dct:source rdf:parseType="Resource">
-            <dct:conformsTo rdf:resource="{@xlink:href}"/>
-        </dct:source>
-    </xsl:template>
-
-    <xsl:template match="gmd:metadataStandardVersion/*">
-        <owl:versionInfo>
-            <xsl:call-template name="xmlLang"/>
-            <xsl:value-of select="."/>
-        </owl:versionInfo>
-    </xsl:template>
-
     <xsl:template match="gmd:specification/gmd:CI_Citation">
-        <xsl:if test="$extended">
-            <wdrs:describedby>
-                <earl:Assertion>
-                    <earl:test>
-                        <xsl:apply-templates select="." mode="specinfo"/>
-                    </earl:test>
-                    <earl:result>
-                        <earl:TestResult>
-                            <earl:outcome>
-                                <xsl:variable name="pass" select="../../gmd:pass/gco:Boolean"/>
-                                <xsl:attribute name="rdf:resource">
-                                    <xsl:value-of select="concat($inspire_md_codelist, 'DegreeOfConformity/')"/>
-                                    <xsl:choose>
-                                        <xsl:when test="$pass = 'true'">conformant</xsl:when>
-                                        <xsl:when test="$pass = 'false'">notConformant</xsl:when>
-                                        <xsl:otherwise>notEvaluated</xsl:otherwise>
-                                    </xsl:choose>
-                                </xsl:attribute>
-                            </earl:outcome>
-                            <xsl:apply-templates select="../../gmd:explanation/*"/>
-                        </earl:TestResult>
-                    </earl:result>
-                </earl:Assertion>
-            </wdrs:describedby>
-        </xsl:if>
         <xsl:apply-templates select="." mode="conformsTo"/>
     </xsl:template>
 
@@ -344,51 +225,11 @@
         </dct:modified>
     </xsl:template>
 
-    <xsl:template match="gmd:contact/*[gmd:organisationName]" mode="qualifiedAttribution">
-        <prov:qualifiedAttribution>
-            <prov:Attribution>
-                <prov:agent>
-                    <xsl:call-template name="vcardOrg"/>
-                </prov:agent>
-                <dct:type rdf:resource="http://inspire.ec.europa.eu/metadata-codelist/ResponsiblePartyRole/pointOfContact"/>
-            </prov:Attribution>
-        </prov:qualifiedAttribution>
-    </xsl:template>
-
     <xsl:template match="gmd:hierarchyLevel[*/@codeListValue = 'dataset' or */@codeListValue = 'series']">
         <dct:type rdf:resource="{concat($inspire_md_codelist, 'ResourceType/', */@codeListValue)}"/>
     </xsl:template>
 
-    <xsl:template match="gmd:hierarchyLevel[*/@codeListValue = 'service']">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'ResourceType/services')}"/>
-        <xsl:apply-templates select="../gmd:identificationInfo/*/srv:serviceType[*/text()]" mode="spatialDataServiceType"/>
-    </xsl:template>
-
     <xsl:template match="gmd:hierarchyLevel"/>
-
-    <xsl:template match="srv:serviceType[* = 'WMS' or * = 'wms' or */text() = 'view' or * = 'VIEW' or * = 'View' or * = 'OGC:WMS' or * = 'ogc:wms']" mode="spatialDataServiceType">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'SpatialDataServiceType/view')}"/>
-    </xsl:template>
-
-    <xsl:template match="srv:serviceType[* = 'WFS' or * = 'wfs' or * = 'download' or * = 'DOWNLOAD' or * = 'Download' or * = 'OGC:WFS' or * = 'ogc:wfs' or * = 'WCS' or * = 'wcs' or * = 'OGC:WCS' or * = 'ogc:wcs']" mode="spatialDataServiceType">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'SpatialDataServiceType/download')}"/>
-    </xsl:template>
-
-    <xsl:template match="srv:serviceType[* = 'CSW' or * = 'csw' or * = 'discovery' or * = 'DISCOVERY' or * = 'Discovery' or * = 'OGC:CSW' or * = 'ogc:csw']" mode="spatialDataServiceType">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'SpatialDataServiceType/download')}"/>
-    </xsl:template>
-
-    <xsl:template match="srv:serviceType[* = 'transformation' or * = 'Transformation' or * = 'TRANSFORMATION']" mode="spatialDataServiceType">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'SpatialDataServiceType/transformation')}"/>
-    </xsl:template>
-
-    <xsl:template match="srv:serviceType[* = 'WPS' or * = 'wps' or * = 'invoke' or * = 'Invoke' or * = 'INVOKE' or * = 'OGC:WPS' or * = 'ogc:wps']" mode="spatialDataServiceType">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'SpatialDataServiceType/transformation')}"/>
-    </xsl:template>
-
-    <xsl:template match="srv:serviceType" mode="spatialDataServiceType">
-        <dct:type rdf:resource="{concat($inspire_md_codelist, 'SpatialDataServiceType/other')}"/>
-    </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:citation/*/gmd:title/gco:CharacterString">
         <dct:title>
@@ -460,14 +301,11 @@
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement">
-        <xsl:if test="gmd:EX_GeographicBoundingBox[string(gmd:southBoundLatitude/*) != string(gmd:northBoundLatitude/*) and string(gmd:westBoundLongitude/*) != string(gmd:eastBoundLongitude/*)] or $openNRW!='true'">
+        <xsl:if test="gmd:EX_GeographicBoundingBox[string(gmd:southBoundLatitude/*) != string(gmd:northBoundLatitude/*) and string(gmd:westBoundLongitude/*) != string(gmd:eastBoundLongitude/*)]">
             <dct:spatial>
                 <dct:Location>
                     <xsl:apply-templates select="../gmd:description/gco:CharacterString"/>
                     <xsl:apply-templates select="gmd:EX_GeographicBoundingBox[string(gmd:southBoundLatitude/*) != string(gmd:northBoundLatitude/*) and string(gmd:westBoundLongitude/*) != string(gmd:eastBoundLongitude/*)]"/>
-                    <xsl:if test="$openNRW!='true'">
-                        <xsl:apply-templates select="gmd:EX_GeographicDescription"/>
-                    </xsl:if>
                 </dct:Location>
             </dct:spatial>
         </xsl:if>
@@ -508,36 +346,6 @@
         </locn:geometry>
     </xsl:template>
 
-    <xsl:template match="gmd:geographicElement/gmd:EX_GeographicDescription[gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code]">
-        <rdfs:seeAlso>
-            <skos:Concept>
-                <xsl:apply-templates select="gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString|gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gmx:Anchor"/>
-                <xsl:apply-templates select="gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gmd:authority/gmd:CI_Citation"/>
-            </skos:Concept>
-        </rdfs:seeAlso>
-    </xsl:template>
-
-    <xsl:template match="gmd:geographicElement/gmd:EX_GeographicDescription[gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code]" mode="openNRW"/>
-
-    <xsl:template match="gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gco:CharacterString">
-        <skos:prefLabel>
-            <xsl:call-template name="xmlLang"/>
-            <xsl:value-of select="text()"/>
-        </skos:prefLabel>
-    </xsl:template>
-
-    <xsl:template match="gmd:geographicIdentifier/gmd:MD_Identifier/gmd:code/gmx:Anchor">
-        <xsl:attribute name="rdf:about">
-            <xsl:value-of select="@xlink:href"/>
-        </xsl:attribute>
-        <xsl:if test="text()">
-            <skos:prefLabel>
-                <xsl:call-template name="xmlLang"/>
-                <xsl:value-of select="text()"/>
-            </skos:prefLabel>
-        </xsl:if>
-    </xsl:template>
-
     <xsl:template match="gmd:authority/gmd:CI_Citation">
         <skos:inScheme>
             <skos:ConceptScheme>
@@ -562,55 +370,6 @@
         </xsl:if>
     </xsl:template>
 
-    <xsl:template match="gmd:identificationInfo/*/gmd:extent/*/gmd:temporalElement/*/gmd:extent/gml:TimePeriod">
-        <dct:temporal>
-            <dct:PeriodOfTime>
-                <xsl:apply-templates select="gml:beginPosition[string-length(text()) &gt; 9]"/>
-                <xsl:apply-templates select="gml:endPosition[string-length(text()) &gt; 9]"/>
-            </dct:PeriodOfTime>
-        </dct:temporal>
-    </xsl:template>
-
-    <xsl:template
-        match="gml:beginPosition[text() castable as xs:date or text() castable as xs:dateTime]">
-        <schema:startDate>
-            <xsl:call-template name="dateType"/>
-            <xsl:value-of select="."/>
-        </schema:startDate>
-    </xsl:template>
-
-    <xsl:template
-        match="gml:endPosition[text() castable as xs:date or text() castable as xs:dateTime]">
-        <schema:endDate>
-            <xsl:call-template name="dateType"/>
-            <xsl:value-of select="."/>
-        </schema:endDate>
-    </xsl:template>
-
-    <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue='publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
-        <dct:issued>
-            <xsl:call-template name="dateType"/>
-            <xsl:value-of select="."/>
-        </dct:issued>
-    </xsl:template>
-
-    <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue='revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
-        <dct:modified>
-            <xsl:call-template name="dateType"/>
-            <xsl:value-of select="."/>
-        </dct:modified>
-    </xsl:template>
-
-    <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue='creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
-        <dct:created>
-            <xsl:call-template name="dateType"/>
-            <xsl:value-of select="."/>
-        </dct:created>
-    </xsl:template>
-    
     <xsl:template name="dateType">
         <xsl:if test="text() castable as xs:date">
             <xsl:attribute name="rdf:datatype">http://www.w3.org/2001/XMLSchema#date</xsl:attribute>
@@ -621,8 +380,7 @@
     </xsl:template>
     
     <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
-            mode="openNRW">
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
         <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
             <dct:modified>
                 <xsl:call-template name="dateType"/>
@@ -638,8 +396,7 @@
     </xsl:template>
 
     <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
-            mode="openNRW">
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
         <dct:modified>
             <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
@@ -647,8 +404,7 @@
     </xsl:template>
 
     <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
-            mode="openNRW">
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
         <xsl:if
                 test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*)">
             <dct:modified>
@@ -662,42 +418,30 @@
         </dct:issued>
     </xsl:template>
 
-    <xsl:template match="gmd:CI_ResponsibleParty">
-        <xsl:if test="gmd:organisationName or gmd:individualName">
-            <xsl:variable name="code" select="gmd:role/gmd:CI_RoleCode/@codeListValue"/>
-            <xsl:choose>
-                <xsl:when test="$code='pointOfContact'">
-                    <dcat:contactPoint>
-                        <xsl:call-template name="vcardOrg"/>
-                    </dcat:contactPoint>
-                </xsl:when>
-                <xsl:when test="$code='publisher' or $code='author'">
-                    <dct:publisher>
-                        <xsl:call-template name="foafOrg"/>
-                    </dct:publisher>
-                </xsl:when>
-                <xsl:when test="$code='originator'">
-                    <dct:creator>
-                        <xsl:call-template name="foafOrg"/>
-                    </dct:creator>
-                </xsl:when>
-                <xsl:when test="$code='owner'">
-                    <dct:rightsHolder>
-                        <xsl:call-template name="foafOrg"/>
-                    </dct:rightsHolder>
-                </xsl:when>
-                <xsl:when test="$code='custodian'">
-                    <dcatde:maintainer>
-                        <xsl:call-template name="foafOrg"/>
-                    </dcatde:maintainer>
-                </xsl:when>
-                <xsl:otherwise>
-                    <dcat:contactPoint>
-                        <xsl:call-template name="vcardOrg"/>
-                    </dcat:contactPoint>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:if>
+    <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='pointOfContact']">
+        <xsl:apply-templates select="." mode="contactPoint"/>
+    </xsl:template>
+
+    <xsl:template match="gmd:CI_ResponsibleParty" mode="contactPoint">
+        <dcat:contactPoint>
+            <xsl:call-template name="vcardOrg"/>
+        </dcat:contactPoint>
+    </xsl:template>
+    
+    <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='publisher']">
+        <xsl:apply-templates select="." mode="publisher"/>
+    </xsl:template>
+    
+    <xsl:template match="gmd:CI_ResponsibleParty" mode="publisher">
+        <dct:publisher>
+            <xsl:call-template name="foafOrg"/>
+        </dct:publisher>
+    </xsl:template>
+    
+    <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='custodian']">
+        <dcatde:maintainer>
+            <xsl:call-template name="foafOrg"/>
+        </dcatde:maintainer>
     </xsl:template>
 
     <xsl:template name="foafOrg">
@@ -883,61 +627,6 @@
     <xsl:template match="gmd:country/*" mode="vcard">
         <vcard:country-name><xsl:value-of select="."/></vcard:country-name>
     </xsl:template>
-    
-    <xsl:template name="serviceDistribution">
-        <xsl:variable name="accessUrl">
-            <xsl:variable name="getCapsUrl" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[srv:operationName/* = 'GetCapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
-            <xsl:choose>
-                <xsl:when test="$getCapsUrl">
-                    <xsl:value-of select="$getCapsUrl"/>
-                </xsl:when>
-                <xsl:when test="gmd:distributionInfo/*/gmd:transferOptions/*/gmd:onLine/*/gmd:linkage/*[text()]">
-                    <xsl:value-of select="gmd:distributionInfo/*/gmd:transferOptions/*/gmd:onLine/*/gmd:linkage/*"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:value-of select="gmd:distributionInfo/*/gmd:distributor/*/gmd:distributorTransferOptions/*/gmd:onLine/*/gmd:linkage/*"/>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
-        <xsl:if test="$accessUrl != ''">
-            <dcat:distribution>
-                <dcat:Distribution>
-                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
-                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
-                    <dcat:accessURL rdf:resource="{$accessUrl}"/>
-                    <xsl:apply-templates select="gmd:identificationInfo/*/srv:serviceType[*/text()]"/>
-                    <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue"/>
-                    <xsl:call-template name="constraints"/>
-                </dcat:Distribution>
-            </dcat:distribution>
-        </xsl:if>
-    </xsl:template>
-<!--
-    <xsl:template match="srv:operationName/*|srv:serviceType/*|gmd:title/*" mode="title">
-        <dct:title>
-            <xsl:call-template name="xmlLang"/>
-            <xsl:value-of select="text()"/>
-        </dct:title>
-    </xsl:template>
--->
-    <xsl:template match="srv:serviceType[* = 'WMS' or * = 'wms' or */text() = 'view' or * = 'VIEW' or * = 'View' or * = 'OGC:WMS']">
-        <xsl:call-template name="dctFormat">
-            <xsl:with-param name="format" select="'WMS'"/>
-        </xsl:call-template>
-    </xsl:template>
-
-    <!-- download could also be WCS? -->
-    <xsl:template match="srv:serviceType[* = 'WFS' or * = 'wfs' or * = 'download' or * = 'DOWNLOAD' or * = 'Download' or * = 'OGC:WFS']">
-        <xsl:call-template name="dctFormat">
-            <xsl:with-param name="format" select="'WFS'"/>
-        </xsl:call-template>
-    </xsl:template>
-
-    <xsl:template match="srv:serviceType[* = 'WCS' or * = 'wcs' or * = 'OGC:WCS']">
-        <xsl:call-template name="dctFormat">
-            <xsl:with-param name="format" select="'WCS'"/>
-        </xsl:call-template>
-    </xsl:template>
 
     <xsl:template match="srv:serviceType">
         <xsl:call-template name="dctFormat">
@@ -965,28 +654,123 @@
         </dct:format>
     </xsl:template>
 
-    <xsl:template name="dataDistributionNRW">
+    <xsl:template name="dataDistribution">
         <xsl:variable name="distributionLinks" select="gmd:distributionInfo/*/gmd:transferOptions/*/gmd:onLine/*[gmd:function/*/@codeListValue='download' and gmd:linkage/*[text()]]"/>
         <xsl:apply-templates select="$distributionLinks" mode="nrw"/>
+        <xsl:variable name="resourceIdentifier" select="gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*"/>
+        <xsl:apply-templates select="$coupledServices/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata[gmd:identificationInfo/*/srv:operatesOn/@uuidref = $resourceIdentifier]" mode="serviceDistribution"/>
+    </xsl:template>
+    
+    <xsl:template match="gmd:MD_Metadata" mode="serviceDistribution">
+        <dcat:distribution>
+            <dcat:Distribution>
+                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
+                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
+                <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
+                <xsl:call-template name="dctFormat">
+                    <xsl:with-param name="format" select="if ($serviceType = '') then 'Unbekannt' else $serviceType"/>
+                </xsl:call-template>
+                <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
+                <xsl:if test="count($capabilitiesLinkage) &gt; 0">
+                    <xsl:variable name="ogcServiceType" select="if (lower-case($serviceType) = 'view') then 'WMS' else if (lower-case($serviceType) = 'download') then 'WFS' else $serviceType"/>
+                    <dcat:accessURL rdf:resource="{if (ends-with(normalize-space($capabilitiesLinkage[1]), '?')) then concat(normalize-space($capabilitiesLinkage[1]), 'REQUEST=GetCapabilities&amp;SERVICE=', $ogcServiceType) else normalize-space($capabilitiesLinkage[1])}"/>
+                </xsl:if>
+                <xsl:if test="count($capabilitiesLinkage) = 0">
+                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/srv:containsOperations[1]/*/srv:connectPoint/*/gmd:linkage/*"/>
+                </xsl:if>
+                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"
+                    mode="serviceDistribution"/>
+                <xsl:call-template name="constraints"/>
+            </dcat:Distribution>
+        </dcat:distribution>
     </xsl:template>
 
-    <xsl:template name="dataDistribution">
-        <xsl:variable name="distributorLinks" select="gmd:distributionInfo/*/gmd:distributor/*/gmd:distributorTransferOptions/*/gmd:onLine/*[gmd:linkage/*[text()]]"/>
-        <xsl:variable name="distributionLinks" select="gmd:distributionInfo/*/gmd:transferOptions/*/gmd:onLine/*[gmd:linkage/*[text()]]"/>
-        <xsl:for-each select="$distributorLinks">
-            <xsl:variable name="link" select="gmd:linkage/*/text()"/>
-            <xsl:if test="not($distributionLinks/gmd:linkage/*[text() = $link])">
-                <xsl:apply-templates select="."/>
-            </xsl:if>
-        </xsl:for-each>
-        <xsl:apply-templates select="$distributionLinks"/>
+    <xsl:template match="srv:connectPoint/*/gmd:linkage/*">
+        <dcat:accessURL rdf:resource="{.}"/>
+    </xsl:template>
+
+    <xsl:template
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
+        mode="serviceDistribution">
+        <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
+            <dct:modified>
+                <xsl:call-template name="dateType"/>
+                <xsl:value-of select="."/>
+            </dct:modified>
+        </xsl:if>
+    </xsl:template>
+    
+    <xsl:template
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
+        mode="serviceDistribution">
+        <dct:modified>
+            <xsl:call-template name="dateType"/>
+            <xsl:value-of select="."/>
+        </dct:modified>
+    </xsl:template>
+    
+    <xsl:template
+        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
+        mode="serviceDistribution">
+        <xsl:if
+            test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*)">
+            <dct:modified>
+                <xsl:call-template name="dateType"/>
+                <xsl:value-of select="."/>
+            </dct:modified>
+        </xsl:if>
     </xsl:template>
     
     <xsl:template match="gmd:CI_OnlineResource" mode="nrw">
         <dcat:distribution>
             <dcat:Distribution>
-                <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
-                <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:abstract/gco:CharacterString[text()]"/>
+                <xsl:variable name="linkage" select="string(gmd:linkage/*)"/>
+                <xsl:choose>
+                    <xsl:when test="gmd:name/*[text() != '']">
+                        <dct:title>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="gmd:name/*"/>
+                        </dct:title>
+                        <dct:description>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="gmd:name/*"/>
+                        </dct:description>
+                    </xsl:when>
+                    <xsl:when test="starts-with($linkage, 'http') and contains($linkage, '?')">
+                        <dct:title>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="$linkage"/>
+                        </dct:title>
+                        <dct:description>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="$linkage"/>
+                        </dct:description>
+                    </xsl:when>
+                    <xsl:when test="contains(gmd:linkage/*, '/')">
+                        <dct:title>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="tokenize($linkage,'/')[last()]"/>
+                        </dct:title>
+                        <dct:description>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="tokenize($linkage,'/')[last()]"/>
+                        </dct:description>
+                    </xsl:when>
+                    <xsl:when test="contains(gmd:linkage/*, '\')">
+                        <dct:title>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="tokenize($linkage,'\')[last()]"/>
+                        </dct:title>
+                        <dct:description>
+                            <xsl:call-template name="xmlLang"/>
+                            <xsl:value-of select="tokenize($linkage,'\')[last()]"/>
+                        </dct:description>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
+                        <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:abstract/gco:CharacterString[text()]"/>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <dcat:downloadURL rdf:resource="{gmd:linkage/*}"/>
                 <dcat:accessURL rdf:resource="{gmd:linkage/*}"/>
                 <xsl:apply-templates select="../../../../gmd:transferOptions/*/gmd:onLine/*[gmd:function/*/@codeListValue='information' and gmd:linkage/*[text()]]"/>
@@ -1016,7 +800,7 @@
         </foaf:Document>
     </xsl:template>
 
-    <xsl:template match="gmd:CI_OnlineResource/gmd:name/*|srv:containsOperations/*/srv:operationName/*">
+    <xsl:template match="gmd:CI_OnlineResource/gmd:name/*">
         <dct:title>
             <xsl:call-template name="xmlLang"/>
             <xsl:value-of select="."/>
@@ -1031,7 +815,7 @@
         <xsl:apply-templates select="../gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString" mode="param"/>
     </xsl:template>
 
-    <xsl:template match="gmd:transferOptions/*/gmd:onLine/gmd:CI_OnlineResource[not(gmd:function/*/@codeListValue = 'download')]/gmd:linkage/*|gmd:citation/*/gmd:identifier/*/gmd:code/*">
+    <xsl:template match="gmd:transferOptions/*/gmd:onLine/gmd:CI_OnlineResource[not(gmd:function/*/@codeListValue = 'download')]/gmd:linkage/*">
         <dcat:accessURL rdf:resource="{.}"/>
     </xsl:template>
 
@@ -1041,23 +825,14 @@
 
 
     <xsl:template name="constraints">
+        <xsl:variable name="accessConstraints" select="ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[gco:CharacterString != $c_no_limitation]"/>
+        <xsl:variable name="accessConstraintsJson" select="$accessConstraints[starts-with(normalize-space(gco:CharacterString), '{')]"/>
         <xsl:choose>
-            <xsl:when test="$openNRW!='true'">
-                <xsl:variable name="useLimitations" select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:resourceConstraints/*/gmd:useLimitation[gco:CharacterString!=$c_no_limitation] |
-                    ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:resourceConstraints/*/gmd:useLimitation[gco:CharacterString!=$c_no_limitation]"/>
-                <xsl:apply-templates select="$useLimitations[1]"/>
+            <xsl:when test="count($accessConstraintsJson) &gt; 0">
+                <xsl:apply-templates select="$accessConstraintsJson[1]" mode="license"/>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:variable name="accessConstraints" select="ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[gco:CharacterString != $c_no_limitation]"/>
-                <xsl:variable name="accessConstraintsJson" select="$accessConstraints[starts-with(normalize-space(gco:CharacterString), '{')]"/>
-                <xsl:choose>
-                    <xsl:when test="count($accessConstraintsJson) &gt; 0">
-                        <xsl:apply-templates select="$accessConstraintsJson[1]" mode="license"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:apply-templates select="$accessConstraints[1]" mode="license"/>
-                    </xsl:otherwise>
-                </xsl:choose>
+                <xsl:apply-templates select="$accessConstraints[1]" mode="license"/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -1073,15 +848,6 @@
     <xsl:template match="gmd:useLimitation/gco:CharacterString|gmd:otherConstraints/gco:CharacterString" mode="license">
         <xsl:variable name="licenseUri">
             <xsl:call-template name="jsonLicenseToUrl"/>
-<!--
-            <xsl:if test="starts-with(normalize-space(.), '{')">
-                <xsl:variable name="jsonWithId" select="substring-after(., '&quot;id&quot;')"/>
-                <xsl:variable name="licenseId" select="substring-before(substring-after($jsonWithId, '&quot;'), '&quot;')"/>
-                <xsl:if test="$licenseId != ''">
-                    <xsl:value-of select="concat('http://dcat-ap.de/def/licenses/', $licenseId)"/>
-                </xsl:if>
-            </xsl:if>
--->
         </xsl:variable>
         <xsl:choose>
             <xsl:when test="$licenseUri != ''">
@@ -1112,7 +878,7 @@
     <xsl:template match="gmd:MD_RestrictionCode[@codeListValue!=$c_other_restrictions]" mode="license">
         <dct:license>
             <xsl:choose>
-                <xsl:when test="$openNRW!='true' or (@codeListValue!=$c_license and ../../gmd:accessConstraints/*/@codeListValue!=$c_license)">
+                <xsl:when test="@codeListValue!=$c_license and ../../gmd:accessConstraints/*/@codeListValue!=$c_license">
                     <dct:LicenseDocument>
                         <rdfs:label>
                             <xsl:call-template name="xmlLang"/>
@@ -1126,7 +892,7 @@
             </xsl:choose>
         </dct:license>
     </xsl:template>
-    
+
     <xsl:template name="jsonLicenseToUrl">
         <xsl:if test="starts-with(normalize-space(.), '{')">
             <xsl:variable name="jsonWithId" select="substring-after(., '&quot;id&quot;')"/>
@@ -1153,11 +919,6 @@
                     <xsl:value-of select="$licenseId"/>
                 </xsl:otherwise>
             </xsl:choose>
-<!--
-            <xsl:if test="$licenseId != ''">
-                <xsl:value-of select="concat('http://dcat-ap.de/def/licenses/', $licenseId)"/>
-            </xsl:if>
--->
         </xsl:if>
     </xsl:template>
 
@@ -1227,74 +988,9 @@
     </xsl:template>
 
     <xsl:template match="gmd:characterSet/*/@codeListValue">
-        <!--<xsl:if test="$extended">-->
-            <!--<cnt:characterEncoding rdf:datatype="http://www.w3.org/2001/XMLSchema#string">-->
-                <!--<xsl:value-of select="."/>-->
-            <!--</cnt:characterEncoding>-->
-        <!--</xsl:if>-->
         <cnt:characterEncoding rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
             <xsl:value-of select="."/>
         </cnt:characterEncoding>
-    </xsl:template>
-
-    <xsl:template match="gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*">
-        <dct:identifier>
-            <xsl:apply-templates select="." mode="identifier"/>
-        </dct:identifier>
-    </xsl:template>
-
-    <xsl:template match="gmd:identifier/*[not(gmd:codeSpace)]/gmd:code/*" mode="identifier">
-        <xsl:apply-templates select="." mode="identifierType"/>
-        <xsl:value-of select="."/>
-    </xsl:template>
-
-    <xsl:template match="gmd:identifier/*[gmd:codeSpace and substring(gmd:codeSpace/*,string-length(gmd:codeSpace/*),1) != '/']/gmd:code/*" mode="identifier">
-        <xsl:apply-templates select="../../gmd:codeSpace/*" mode="identifierType"/>
-        <xsl:call-template name="replace">
-            <xsl:with-param name="str" select="concat(../../gmd:codeSpace/*, '/', ../../gmd:code/*)"/>
-            <xsl:with-param name="from" select="' '"/>
-            <xsl:with-param name="to" select="'%20'"/>
-        </xsl:call-template>
-    </xsl:template>
-
-    <xsl:template match="gmd:identifier/*[gmd:codeSpace and substring(gmd:codeSpace/*,string-length(gmd:codeSpace/*),1) = '/']/gmd:code/*" mode="identifier">
-        <xsl:apply-templates select="../../gmd:codeSpace/*" mode="identifierType"/>
-        <xsl:call-template name="replace">
-            <xsl:with-param name="str" select="concat(../../gmd:codeSpace/*, ../../gmd:code/*)"/>
-            <xsl:with-param name="from" select="' '"/>
-            <xsl:with-param name="to" select="'%20'"/>
-        </xsl:call-template>
-    </xsl:template>
-
-    <xsl:template match="*[starts-with(text(), 'http://') or starts-with(text(), 'https://')]" mode="identifierType">
-        <xsl:attribute name="rdf:datatype">http://www.w3.org/2001/XMLSchema#anyURI</xsl:attribute>
-    </xsl:template>
-
-    <xsl:template match="*[not(starts-with(text(), 'http://') or starts-with(text(), 'https://'))]" mode="identifierType">
-        <xsl:attribute name="rdf:datatype">http://www.w3.org/2001/XMLSchema#string</xsl:attribute>
-    </xsl:template>
-
-    <xsl:template name="replace">
-        <xsl:param name="str"/>
-        <xsl:param name="from"/>
-        <xsl:param name="to"/>
-        <xsl:choose>
-            <xsl:when test="contains($str, $from)">
-                <xsl:value-of select="concat(substring-before($str, $from), $to)"/>
-                <xsl:call-template name="replace">
-                    <xsl:with-param name="str" select="substring-after($str, $from)"/>
-                    <xsl:with-param name="from" select="$from"/>
-                    <xsl:with-param name="to" select="$to"/>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:value-of select="$str"/>
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-
-    <xsl:template match="gmd:parentIdentifier/*[text()]">
-        <dct:isPartOf rdf:resource="{text()}"/>
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[not(gmd:thesaurusName)]/gmd:keyword/gco:CharacterString">
@@ -1306,51 +1002,11 @@
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/*, 'GEMET - INSPIRE themes')]/gmd:keyword[1]/gco:CharacterString">
-        <xsl:variable name="themeLabel" select="text()"/>
-        <xsl:variable name="themeUri" select="$inspireThemes/rdf:RDF/rdf:Description[dct:title = $themeLabel]/@rdf:about"/>
-        <xsl:choose>
-            <xsl:when test="$themeUri and $openNRW!='true'">
-                <dcat:theme rdf:resource="{$themeUri}"/>
-                <xsl:call-template name="euroVocDomain">
-                    <xsl:with-param name="inspireTheme" select="$themeUri"/>
-                </xsl:call-template>
-                <xsl:variable name="euroVocUri" select="$euroVocMapping/rdf:RDF/rdf:Description[skos:exactMatch/@rdf:resource=$themeUri]/@rdf:about"/>
-                <xsl:choose>
-                    <xsl:when test="$euroVocUri">
-                        <dcat:theme rdf:resource="{$euroVocUri}"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:variable name="broaderEuroVocUri" select="$euroVocMapping/rdf:RDF/rdf:Description[skos:narrowMatch/@rdf:resource=$themeUri]/@rdf:about"/>
-                        <xsl:if test="$broaderEuroVocUri">
-                            <dcat:theme rdf:resource="{$broaderEuroVocUri}"/>
-                        </xsl:if>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:when>
-            <xsl:when test="$extended">
-                <xsl:call-template name="themeSkos"/>
-                <xsl:if test="$openNRW!='true'">
-                    <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:topicCategory/*|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:topicCategory/*" mode="dcatTheme"/>
-                </xsl:if>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:call-template name="dcatKeyword"/>
-                <xsl:if test="$openNRW!='true'">
-                    <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:topicCategory/*|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:topicCategory/*" mode="dcatTheme"/>
-                </xsl:if>
-            </xsl:otherwise>
-        </xsl:choose>
+        <xsl:call-template name="dcatKeyword"/>
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[gmd:thesaurusName and not(starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/*, 'GEMET - INSPIRE themes'))]/gmd:keyword/gco:CharacterString">
-        <xsl:choose>
-            <xsl:when test="$extended">
-                <xsl:call-template name="themeSkos"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:call-template name="dcatKeyword"/>
-            </xsl:otherwise>
-        </xsl:choose>
+        <xsl:call-template name="dcatKeyword"/>
     </xsl:template>
 
     <xsl:template name="dcatKeyword">
@@ -1415,10 +1071,6 @@
         </dct:provenance>
     </xsl:template>
 
-    <xsl:template match="gmd:identificationInfo/*/gmd:topicCategory/*">
-        <dct:subject rdf:resource="{concat($inspire_md_codelist, 'TopicCategory/', .)}"/>
-    </xsl:template>
-
     <xsl:template match="gmd:maintenanceAndUpdateFrequency/*/@codeListValue[.='continual']">
         <dct:accrualPeriodicity rdf:resource="http://publications.europa.eu/resource/authority/frequency/CONT"/>
     </xsl:template>
@@ -1463,7 +1115,7 @@
         <dct:accrualPeriodicity rdf:resource="{concat('http://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequencyCode/', .)}"/>
     </xsl:template>
 
-    <xsl:template name="topicOpenNRW">
+    <xsl:template name="topicCategory">
         <xsl:variable name="topicCategories" select="gmd:identificationInfo[1]/*/gmd:topicCategory/*"/>
         <xsl:if test="$topicCategories[.='farming']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/AGRI"/>
@@ -1473,7 +1125,7 @@
             or .='geoscientificInformation']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENVI"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='boundaries' or .='location' or .='planningCadastre' or .='geoscientificInformation']">
+        <xsl:if test="$topicCategories[.='boundaries' or .='location' or .='planningCadastre' or .='geoscientificInformation' or .='structure']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/REGI"/>
         </xsl:if>
         <xsl:if test="$topicCategories[.='economy']">
@@ -1494,122 +1146,7 @@
         </xsl:if>
         <xsl:if test="$topicCategories[.='utilitiesCommunication']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENER"/>
-            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/INTR"/>
-            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/GOVE"/>
-            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TECH"/>
         </xsl:if>
-    </xsl:template>
-
-    <xsl:template match="gmd:identificationInfo/*/gmd:topicCategory/*" mode="dcatTheme">
-        <xsl:param name="ckanTheme" select="''"/>
-        <xsl:call-template name="euroVocDomain">
-            <xsl:with-param name="inspireTheme" select="text()"/>
-            <xsl:with-param name="ckanTheme" select="$ckanTheme"/>
-        </xsl:call-template>
-    </xsl:template>
-
-    <!-- mapping of INSPIRE themes / ISO topicCategory to the EuroVoc domain and categorization topic -->
-    <xsl:template name="euroVocDomain">
-        <xsl:param name="inspireTheme"/>
-        <xsl:param name="ckanTheme" select="''"/>
-        <xsl:choose>
-            <xsl:when test="$ckanTheme!=''">
-                <dcat:theme rdf:resource="{concat('http://publications.europa.eu/resource/authority/data-theme/',$ckanTheme)}"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/ad' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/oi' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/rs' or
-                $inspireTheme = 'intelligenceMilitary' or $inspireTheme = 'imageryBaseMapsEarthCover'
-                or $inspireTheme = 'location'">
-                <!-- there is no mapping for these themes -->
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/gn'">
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/REGI"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/ac' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/am' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/br' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/ef' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/el' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/er' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/hb' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/lc' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/mr' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/nz' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/of' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/ps' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/sr' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/sd' or
-                $inspireTheme = 'biota' or $inspireTheme = 'climatologyMeteorologyAtmosphere' or
-                $inspireTheme = 'elevation' or $inspireTheme = 'environment' or
-                $inspireTheme = 'inlandWaters' or
-                $inspireTheme = 'oceans'">
-                <!-- environment -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100155"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENVI"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/af' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/lu' or
-                $inspireTheme = 'farming'">
-                <!-- agriculture, forestry and fishery -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100156"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/AGRI"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/au' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/us' or
-                $inspireTheme = 'boundaries'">
-                <!-- politics -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100142"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/GOVE"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/bu' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/pf' or
-                $inspireTheme = 'utilitiesCommunication' or $inspireTheme = 'structure'">
-                <!-- industry -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100160"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ECON"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/cp' or
-                $inspireTheme = 'planningCadastre'">
-                <!-- law -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100145"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/JUST"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/hh' or
-                $inspireTheme = 'health'">
-                <!-- health -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100149"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/HEAL"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/pd' or
-                $inspireTheme = 'society'">
-                <!-- social questions -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100149"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/SOCI"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/ge' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/gg' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/hy' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/mf' or
-                $inspireTheme = 'http://inspire.ec.europa.eu/theme/so' or
-                $inspireTheme = 'geoscientificInformation'">
-                <!-- sciences -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100151"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TECH"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/su' or
-                $inspireTheme = 'economy'">
-                <!-- economics -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100146"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ECON"/>
-            </xsl:when>
-            <xsl:when test="$inspireTheme = 'http://inspire.ec.europa.eu/theme/tn' or
-                $inspireTheme = 'transportation'">
-                <!-- transport -->
-                <dcat:theme rdf:resource="http://eurovoc.europa.eu/100154"/>
-                <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TRAN"/>
-            </xsl:when>
-        </xsl:choose>
     </xsl:template>
 
     <xsl:template match="gmd:language/*[@codeListValue]|gmd:language/gco:CharacterString">

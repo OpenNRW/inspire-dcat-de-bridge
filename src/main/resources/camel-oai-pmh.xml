@@ -15,10 +15,14 @@
      certificates. Remove this bean from the configuration if you require trusted HTTPS connections! -->
     <bean id="httpClientConfigurer" class="eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig"/>
 
-    <bean id="uriResolverFactory" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolverFactory"/>
+    <bean id="uriResolverFactory" class="eu.odp.harvest.geo.oai.xslt.HttpAwareUriResolverFactory">
+        <property name="producer" ref="template"/>
+    </bean>
 
     <!-- Camel context for this application -->
     <camelContext xmlns="http://camel.apache.org/schema/spring" xmlns:oai="http://www.openarchives.org/OAI/2.0/">
+        <template id="template"/>
+
         <!-- internal endpoint of processing route for csw catalogs -->
         <endpoint id="csw" uri="direct:csw"/>
         <!-- internal endpoint of processing route for CKAN catalogs -->
@@ -104,11 +108,11 @@
                     <choice>
                         <when>
                             <simple>${header.out} == null</simple>
-                            <to uri="xslt:inspireResponse.xsl"/>
+                            <to uri="xslt:inspireResponse.xsl?uriResolverFactory=uriResolverFactory"/>
                         </when>
                         <when>
                             <simple>${header.out} != 'csw'</simple>
-                            <to uri="xslt:inspireResponse.xsl"/>
+                            <to uri="xslt:inspireResponse.xsl?uriResolverFactory=uriResolverFactory"/>
                         </when>
                     </choice>
                 </when>
@@ -140,6 +144,69 @@
                 <constant>http://www.opengis.net/cat/csw/2.0.2/requests#GetRecords</constant>
             </setHeader>
             <to ref="inspire"/>
+        </route>
+
+        <!-- this route retrieves the coupled services from a CSW for datasets based on the datasets' resource identifiers.
+         The resource identifiers are required input and must be passed to this route as header "resourceIdentifiers" in
+         the format "id1|id2|id3|..." -->
+        <route>
+            <from uri="direct:getCoupledServices"/>
+            <setBody>
+                <constant>&lt;dummy/&gt;</constant>
+            </setBody>
+            <to uri="xslt:coupledServices.xsl"/>
+            <convertBodyTo type="java.lang.String"/>
+            <to uri="log:input"/>
+            <setHeader headerName="CamelHttpUri">
+                <simple>${db.item.csw.URL}</simple>
+            </setHeader>
+            <choice>
+                <when>
+                    <simple>${header.soapVersion} == '1.1'</simple>
+                    <setHeader headerName="Content-Type">
+                        <constant>text/xml</constant>
+                    </setHeader>
+                </when>
+                <when>
+                    <simple>${header.soapVersion} == '1.2'</simple>
+                    <setHeader headerName="Content-Type">
+                        <constant>application/soap+xml</constant>
+                    </setHeader>
+                </when>
+                <otherwise>
+                    <setHeader headerName="Content-Type">
+                        <constant>application/xml</constant>
+                    </setHeader>
+                </otherwise>
+            </choice>
+            <setHeader headerName="CamelHttpMethod">
+                <constant>POST</constant>
+            </setHeader>
+            <to uri="http://dummy?httpClient.soTimeout=180000"/>
+        </route>
+
+        <!-- route for INSPIRE catalogs via SOAP 1.1 -->
+        <route>
+            <from uri="direct:getCoupledServicesSoap11"/>
+            <setHeader headerName="soapVersion">
+                <simple>1.1</simple>
+            </setHeader>
+            <setHeader headerName="SOAPAction">
+                <constant>http://www.opengis.net/cat/csw/2.0.2/requests#GetRecords</constant>
+            </setHeader>
+            <to uri="direct:getCoupledServices"/>
+        </route>
+
+        <!-- route for INSPIRE catalogs via SOAP 1.2 -->
+        <route>
+            <from uri="direct:getCoupledServicesSoap12"/>
+            <setHeader headerName="soapVersion">
+                <simple>1.2</simple>
+            </setHeader>
+            <setHeader headerName="SOAPAction">
+                <constant>http://www.opengis.net/cat/csw/2.0.2/requests#GetRecords</constant>
+            </setHeader>
+            <to uri="direct:getCoupledServices"/>
         </route>
 
         <!-- management route for harvester types -->
@@ -217,6 +284,9 @@
                     </setHeader>
                 </when>
             </choice>
+            <setHeader headerName="db.item.ckan.URL">
+                <simple>${db.item.ckan.URL}</simple>
+            </setHeader>
             <setBody>
                 <constant>&lt;dummy/&gt;</constant>
             </setBody>
