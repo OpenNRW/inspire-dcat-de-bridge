@@ -4,7 +4,7 @@
     <artifactId>oai-pmh-geo-harvest</artifactId>
     <packaging>war</packaging>
     <name>GeoDCAT-AP.de Geo-Harvesting via OAI-PMH</name>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <description>This is the web application of the harvest service</description>
     <!-- core developers ======================================================= -->
     <developers>

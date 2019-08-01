@@ -44,6 +44,7 @@
     <xsl:variable name="mdrFileTypes" select="document('filetypes-skos.rdf')"/>
     <xsl:variable name="ianaMediaTypes" select="document('iana-media-types.xml')"/>
     <xsl:variable name="languageCodes" select="document('languageCodes.rdf')"/>
+    <xsl:variable name="inspireThemes" select="document('themes.rdf')"/>
 
     <xsl:variable name="inspire_md_codelist">http://inspire.ec.europa.eu/metadata-codelist/</xsl:variable>
 
@@ -59,7 +60,7 @@
         <xsl:value-of select="concat('?', $resourceIdentifiers)"/>
     </xsl:variable>
     <xsl:variable name="coupledServices" select="document($coupledServicesUri)"/>
-    
+
     <xsl:template match="gmd:MD_Metadata|gmi:MI_Metadata">
         <dcat:Dataset>
             <!--dct:description-->
@@ -82,13 +83,13 @@
 
             <!--dct:title-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
-            
+
             <!--dct:description-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
-            
+
             <!--dct:identifier-->
             <xsl:apply-templates select="gmd:fileIdentifier/gco:CharacterString"/>
-            
+
             <!--dct:language-->
             <!--cnt:characterEncoding-->
             <xsl:choose>
@@ -101,24 +102,24 @@
                     <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:characterSet/*/@codeListValue|ancestor::gmi:MI_Metadata/gmd:identificationInfo/*/gmd:characterSet/*/@codeListValue"/>
                 </xsl:otherwise>
             </xsl:choose>
-            
-            
+
+
             <!--dct:accessRights-->
             <xsl:variable name="accessConstraints" select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[. != $c_no_limitation]"/>
             <xsl:apply-templates select="$accessConstraints[1]"/>
-            
+
             <!--dcat:keyword-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:descriptiveKeywords/*/gmd:keyword/gco:CharacterString[text()]"/>
-            
+
             <!--dcatde:politicalGeocodingLevelURI-->
             <!--dcatde:politicalGeocodingURI-->
-            
+
             <!--dct:spatial-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement"/>
-            
+
             <!--dct:created dct:issued dct:modified-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"/>
-            
+
             <!--dcat:contactPoint dct:publisher dcatde:maintainer-->
             <xsl:variable name="pointOfContact" select="gmd:identificationInfo[1]/*/gmd:pointOfContact/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='pointOfContact']"/>
             <xsl:variable name="publisher" select="gmd:identificationInfo[1]/*/gmd:pointOfContact/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='publisher']"/>
@@ -136,16 +137,16 @@
                     </xsl:if>
                 </xsl:otherwise>
             </xsl:choose>
-            
-            
+
+
             <xsl:apply-templates select="gmd:dataQualityInfo/*/gmd:report/*/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation"/>
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceMaintenance/*/gmd:maintenanceAndUpdateFrequency/*/@codeListValue"/>
             <xsl:apply-templates select="gmd:hierarchyLevel"/>
-            
+
             <!--dcat:distribution-->
             <xsl:call-template name="dataDistribution"/>
 
-            <xsl:call-template name="topicCategory"/>
+            <xsl:call-template name="dcatTheme"/>
         </dcat:Dataset>
     </xsl:template>
 
@@ -378,7 +379,7 @@
             <xsl:attribute name="rdf:datatype">http://www.w3.org/2001/XMLSchema#dateTime</xsl:attribute>
         </xsl:if>
     </xsl:template>
-    
+
     <xsl:template
         match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
         <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
@@ -427,17 +428,17 @@
             <xsl:call-template name="vcardOrg"/>
         </dcat:contactPoint>
     </xsl:template>
-    
+
     <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='publisher']">
         <xsl:apply-templates select="." mode="publisher"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:CI_ResponsibleParty" mode="publisher">
         <dct:publisher>
             <xsl:call-template name="foafOrg"/>
         </dct:publisher>
     </xsl:template>
-    
+
     <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='custodian']">
         <dcatde:maintainer>
             <xsl:call-template name="foafOrg"/>
@@ -477,16 +478,16 @@
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:address/*"/>
         </rdf:Description>
     </xsl:template>
-    
+
     <xsl:template match="gmd:organisationName/gco:CharacterString">
         <foaf:name><xsl:value-of select="."/></foaf:name>
     </xsl:template>
-    
+
     <xsl:template match="gmd:individualName/gco:CharacterString">
         <foaf:name><xsl:value-of select="."/></foaf:name>
         <xsl:apply-templates select="../../gmd:organisationName/gco:CharacterString[text()]" mode="memberOf"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:organisationName/gco:CharacterString" mode="memberOf">
         <org:memberOf>
             <foaf:Organization>
@@ -494,19 +495,19 @@
             </foaf:Organization>
         </org:memberOf>
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:address/*/gmd:electronicMailAddress/*">
         <foaf:mbox rdf:resource="{concat('mailto:', text())}"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:phone/*/gmd:voice/*">
         <foaf:phone rdf:resource="{concat('tel:+', translate(translate(translate(translate(translate(normalize-space(.),' ',''),'(',''),')',''),'+',''),'.',''))}"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:onlineResource/*/gmd:linkage/*">
         <foaf:homepage rdf:resource="{text()}" />
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:address/*">
         <locn:address>
             <locn:Address>
@@ -518,27 +519,27 @@
             </locn:Address>
         </locn:address>
     </xsl:template>
-    
+
     <xsl:template match="gmd:deliveryPoint/*">
         <locn:thoroughfare><xsl:value-of select="."/></locn:thoroughfare>
     </xsl:template>
-    
+
     <xsl:template match="gmd:city/*">
         <locn:postName><xsl:value-of select="."/></locn:postName>
     </xsl:template>
-    
+
     <xsl:template match="gmd:postalCode/*">
         <locn:postCode><xsl:value-of select="."/></locn:postCode>
     </xsl:template>
-    
+
     <xsl:template match="gmd:administrativeArea/*">
         <locn:adminUnitL2><xsl:value-of select="."/></locn:adminUnitL2>
     </xsl:template>
-    
+
     <xsl:template match="gmd:country/*">
         <locn:adminUnitL1><xsl:value-of select="."/></locn:adminUnitL1>
     </xsl:template>
-    
+
     <xsl:template name="vcardOrg">
         <rdf:Description>
             <xsl:variable name="orgLink" select="string(gmd:organisationName/gmx:Anchor/@xlink:href)"/>
@@ -572,30 +573,30 @@
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:address/*" mode="vcard"/>
         </rdf:Description>
     </xsl:template>
-    
+
     <xsl:template match="gmd:organisationName/gco:CharacterString" mode="vcard">
         <vcard:organization-name><xsl:value-of select="."/></vcard:organization-name>
     </xsl:template>
-    
+
     <xsl:template match="gmd:individualName/gco:CharacterString" mode="vcard">
         <vcard:fn><xsl:value-of select="."/></vcard:fn>
     </xsl:template>
-    
+
     <xsl:template match="gmd:electronicMailAddress/*" mode="vcard">
         <vcard:hasEmail rdf:resource="{concat('mailto:', .)}"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:phone/*/gmd:voice/*" mode="vcard">
         <vcard:hasTelephone rdf:parseType="Resource">
             <vcard:hasValue rdf:resource="{concat('tel:+', translate(translate(translate(translate(translate(normalize-space(.),' ',''),'(',''),')',''),'+',''),'.',''))}"/>
             <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Voice"/>
         </vcard:hasTelephone>
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:onlineResource/*/gmd:linkage/*" mode="vcard">
         <vcard:hasURL rdf:resource="{.}"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:contactInfo/*/gmd:address/*" mode="vcard">
         <vcard:hasAddress>
             <vcard:Address>
@@ -607,23 +608,23 @@
             </vcard:Address>
         </vcard:hasAddress>
     </xsl:template>
-    
+
     <xsl:template match="gmd:deliveryPoint/*" mode="vcard">
         <vcard:street-address><xsl:value-of select="."/></vcard:street-address>
     </xsl:template>
-    
+
     <xsl:template match="gmd:city/*" mode="vcard">
         <vcard:locality><xsl:value-of select="."/></vcard:locality>
     </xsl:template>
-    
+
     <xsl:template match="gmd:postalCode/*" mode="vcard">
         <vcard:postal-code><xsl:value-of select="."/></vcard:postal-code>
     </xsl:template>
-    
+
     <xsl:template match="gmd:administrativeArea/*" mode="vcard">
         <vcard:region><xsl:value-of select="."/></vcard:region>
     </xsl:template>
-    
+
     <xsl:template match="gmd:country/*" mode="vcard">
         <vcard:country-name><xsl:value-of select="."/></vcard:country-name>
     </xsl:template>
@@ -660,7 +661,7 @@
         <xsl:variable name="resourceIdentifier" select="gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*"/>
         <xsl:apply-templates select="$coupledServices/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata[gmd:identificationInfo/*/srv:operatesOn/@uuidref = $resourceIdentifier]" mode="serviceDistribution"/>
     </xsl:template>
-    
+
     <xsl:template match="gmd:MD_Metadata" mode="serviceDistribution">
         <dcat:distribution>
             <dcat:Distribution>
@@ -699,7 +700,7 @@
             </dct:modified>
         </xsl:if>
     </xsl:template>
-    
+
     <xsl:template
         match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
         mode="serviceDistribution">
@@ -708,7 +709,7 @@
             <xsl:value-of select="."/>
         </dct:modified>
     </xsl:template>
-    
+
     <xsl:template
         match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
         mode="serviceDistribution">
@@ -720,7 +721,7 @@
             </dct:modified>
         </xsl:if>
     </xsl:template>
-    
+
     <xsl:template match="gmd:CI_OnlineResource" mode="nrw">
         <dcat:distribution>
             <dcat:Distribution>
@@ -779,7 +780,7 @@
             </dcat:Distribution>
         </dcat:distribution>
     </xsl:template>
-    
+
     <xsl:template match="gmd:CI_OnlineResource[gmd:function/*/@codeListValue = 'information' or gmd:function/*/@codeListValue = 'search']">
         <foaf:page>
             <xsl:call-template name="foafDocument"/>
@@ -1115,37 +1116,76 @@
         <dct:accrualPeriodicity rdf:resource="{concat('http://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequencyCode/', .)}"/>
     </xsl:template>
 
-    <xsl:template name="topicCategory">
+    <xsl:template name="dcatTheme">
         <xsl:variable name="topicCategories" select="gmd:identificationInfo[1]/*/gmd:topicCategory/*"/>
-        <xsl:if test="$topicCategories[.='farming']">
+
+        <xsl:variable name="inspireThemesLabels" select="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString, 'GEMET - INSPIRE themes')]/gmd:keyword/gco:CharacterString/lower-case(text())"/>
+
+        <xsl:variable name="inspireThemeUris" select="$inspireThemes/rdf:RDF/rdf:Description[some $title in dct:title satisfies lower-case($title) = $inspireThemesLabels]/@rdf:about"/>
+
+        <xsl:variable name="keywords" select="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[not(gmd:thesaurusName)]/gmd:keyword/gco:CharacterString"/>
+
+        <xsl:if test="$topicCategories[.='farming' or .='imageryBaseMapsEarthCover' or .='inlandWaters' or .='oceans']
+            or $keywords[.='AGRI']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/AGRI"/>
         </xsl:if>
         <xsl:if test="$topicCategories[.='biota' or .='climatologyMeteorologyAtmosphere' or
             .='elevation' or .='environment' or .='imageryBaseMapsEarthCover' or .='inlandWaters' or .='oceans'
-            or .='geoscientificInformation']">
+            or .='geoscientificInformation' or .='farming' or .='utilitiesCommunication']
+            or ($topicCategories[.='economy'] and $inspireThemeUris[.='http://inspire.ec.europa.eu/theme/mr' or .='http://inspire.ec.europa.eu/theme/er'])
+            or ($topicCategories[.='structure'] and $inspireThemeUris[.='http://inspire.ec.europa.eu/theme/ef'])
+            or $keywords[.='ENVI']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENVI"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='boundaries' or .='location' or .='planningCadastre' or .='geoscientificInformation' or .='structure']">
+        <xsl:if test="$topicCategories[.='boundaries' or .='location' or .='planningCadastre' or
+            .='geoscientificInformation' or .='structure' or .='imageryBaseMapsEarthCover']
+            or $keywords[.='REGI']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/REGI"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='economy']">
+        <xsl:if test="$topicCategories[.='boundaries' or .='elevation' or .='imageryBaseMapsEarthCover' or
+            .='location' or .='planningCadastre' or .='utilitiesCommunication']
+            or $keywords[.='GOVE']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/GOVE"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='climatologyMeteorologyAtmosphere' or .='elevation' or
+            .='geoscientificInformation' or .='imageryBaseMapsEarthCover']
+            or ($topicCategories[.='economy'] and $inspireThemeUris[.='http://inspire.ec.europa.eu/theme/mr' or .='http://inspire.ec.europa.eu/theme/er'])
+            or $keywords[.='TECH']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TECH"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='economy']
+            or ($topicCategories[.='structure'] and $inspireThemeUris[.='http://inspire.ec.europa.eu/theme/pf'])
+            or $keywords[.='ECON']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ECON"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='health']">
+        <xsl:if test="$topicCategories[.='health']
+            or $keywords[.='HEAL']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/HEAL"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='intelligenceMilitary' or .='society']">
+        <xsl:if test="$topicCategories[.='intelligenceMilitary']
+            or ($topicCategories[.='planningCadastre'] and $inspireThemeUris[.='http://inspire.ec.europa.eu/theme/cp'])
+            or $keywords[.='JUST']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/JUST"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='society']">
+        <xsl:if test="$topicCategories[.='society']
+            or $keywords[.='SOCI']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/SOCI"/>
+        </xsl:if>
+        <xsl:if test="$topicCategories[.='society']
+            or $keywords[.='EDUC']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/EDUC"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='transportation']">
+        <xsl:if test="$topicCategories[.='transportation' or .='inlandWaters' or .='oceans' or .='structure']
+            or $keywords[.='TRAN']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/TRAN"/>
         </xsl:if>
-        <xsl:if test="$topicCategories[.='utilitiesCommunication']">
+        <xsl:if test="$topicCategories[.='utilitiesCommunication']
+            or ($topicCategories[.='economy'] and $inspireThemeUris[.='http://inspire.ec.europa.eu/theme/er'])
+            or $keywords[.='ENER']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/ENER"/>
+        </xsl:if>
+        <xsl:if test="$keywords[.='INTR']">
+            <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/INTR"/>
         </xsl:if>
     </xsl:template>
 
