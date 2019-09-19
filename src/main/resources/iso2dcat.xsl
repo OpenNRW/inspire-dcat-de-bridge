@@ -646,10 +646,7 @@
                     </xsl:attribute>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:attribute name="rdf:parseType">Resource</xsl:attribute>
-                    <rdfs:label>
-                        <xsl:value-of select="$format"/>
-                    </rdfs:label>
+                    <xsl:value-of select="$format"/>
                 </xsl:otherwise>
             </xsl:choose>
         </dct:format>
