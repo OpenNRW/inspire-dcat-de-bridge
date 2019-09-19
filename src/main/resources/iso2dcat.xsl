@@ -447,31 +447,29 @@
 
     <xsl:template name="foafOrg">
         <rdf:Description>
-            <xsl:variable name="orgLink" select="string(gmd:organisationName/gmx:Anchor/@xlink:href)"/>
-            <xsl:variable name="indLink" select="string(gmd:individualName/gmx:Anchor/@xlink:href)"/>
-            <xsl:choose>
-                <xsl:when test="$indLink != ''">
-                    <xsl:attribute name="rdf:resource"><xsl:value-of select="$indLink"/></xsl:attribute>
-                </xsl:when>
-                <xsl:when test="$orgLink != ''">
-                    <xsl:attribute name="rdf:resource"><xsl:value-of select="$orgLink"/></xsl:attribute>
-                </xsl:when>
-            </xsl:choose>
             <xsl:variable name="orgName" select="string(gmd:organisationName/gco:CharacterString)"/>
             <xsl:variable name="indName" select="string(gmd:individualName/gco:CharacterString)"/>
             <xsl:choose>
-                <xsl:when test="$indName != ''">
-                    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
-                </xsl:when>
                 <xsl:when test="$orgName != ''">
                     <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Organization"/>
+                    <xsl:variable name="orgLink" select="string(gmd:organisationName/gmx:Anchor/@xlink:href)"/>
+                    <xsl:if test="$orgLink != ''">
+                        <xsl:attribute name="rdf:resource"><xsl:value-of select="$orgLink"/></xsl:attribute>
+                    </xsl:if>
+                    <xsl:apply-templates select="gmd:organisationName/gco:CharacterString[text()]"/>
+                </xsl:when>
+                <xsl:when test="$indName != ''">
+                    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+                    <xsl:variable name="indLink" select="string(gmd:individualName/gmx:Anchor/@xlink:href)"/>
+                    <xsl:if test="$indLink != ''">
+                        <xsl:attribute name="rdf:resource"><xsl:value-of select="$indLink"/></xsl:attribute>
+                    </xsl:if>
+                    <xsl:apply-templates select="gmd:individualName/gco:CharacterString[text()]"/>
                 </xsl:when>
                 <xsl:otherwise>
                     <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
                 </xsl:otherwise>
             </xsl:choose>
-            <xsl:apply-templates select="gmd:organisationName[not(../gmd:individualName/gco:CharacterString/text())]/gco:CharacterString[text()]"/>
-            <xsl:apply-templates select="gmd:individualName/gco:CharacterString[text()]"/>
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:address/*/gmd:electronicMailAddress/gco:CharacterString[not(contains(text, ';') or contains(text, ',') or contains(text, ' '))]"/>
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:phone/*/gmd:voice/*[text()]"/>
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:onlineResource/*/gmd:linkage/*[text()]"/>
@@ -479,13 +477,8 @@
         </rdf:Description>
     </xsl:template>
 
-    <xsl:template match="gmd:organisationName/gco:CharacterString">
+    <xsl:template match="gmd:organisationName/gco:CharacterString|gmd:individualName/gco:CharacterString">
         <foaf:name><xsl:value-of select="."/></foaf:name>
-    </xsl:template>
-
-    <xsl:template match="gmd:individualName/gco:CharacterString">
-        <foaf:name><xsl:value-of select="."/></foaf:name>
-        <xsl:apply-templates select="../../gmd:organisationName/gco:CharacterString[text()]" mode="memberOf"/>
     </xsl:template>
 
     <xsl:template match="gmd:organisationName/gco:CharacterString" mode="memberOf">
@@ -542,31 +535,29 @@
 
     <xsl:template name="vcardOrg">
         <rdf:Description>
-            <xsl:variable name="orgLink" select="string(gmd:organisationName/gmx:Anchor/@xlink:href)"/>
-            <xsl:variable name="indLink" select="string(gmd:individualName/gmx:Anchor/@xlink:href)"/>
-            <xsl:choose>
-                <xsl:when test="$indLink != ''">
-                    <xsl:attribute name="rdf:resource"><xsl:value-of select="$indLink"/></xsl:attribute>
-                </xsl:when>
-                <xsl:when test="$orgLink != ''">
-                    <xsl:attribute name="rdf:resource"><xsl:value-of select="$orgLink"/></xsl:attribute>
-                </xsl:when>
-            </xsl:choose>
             <xsl:variable name="orgName" select="string(gmd:organisationName/gco:CharacterString)"/>
             <xsl:variable name="indName" select="string(gmd:individualName/gco:CharacterString)"/>
             <xsl:choose>
-                <xsl:when test="$indName != ''">
-                    <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Individual"/>
-                </xsl:when>
                 <xsl:when test="$orgName != ''">
+                    <xsl:variable name="orgLink" select="string(gmd:organisationName/gmx:Anchor/@xlink:href)"/>
+                    <xsl:if test="$orgLink != ''">
+                        <xsl:attribute name="rdf:resource"><xsl:value-of select="$orgLink"/></xsl:attribute>
+                    </xsl:if>
                     <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Organization"/>
+                    <xsl:apply-templates select="gmd:organisationName/gco:CharacterString[text()]" mode="vcard"/>
+                </xsl:when>
+                <xsl:when test="$indName != ''">
+                    <xsl:variable name="indLink" select="string(gmd:individualName/gmx:Anchor/@xlink:href)"/>
+                    <xsl:if test="$indLink != ''">
+                        <xsl:attribute name="rdf:resource"><xsl:value-of select="$indLink"/></xsl:attribute>
+                    </xsl:if>
+                    <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Individual"/>
+                    <xsl:apply-templates select="gmd:individualName/gco:CharacterString[text()]" mode="vcard"/>
                 </xsl:when>
                 <xsl:otherwise>
                     <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Kind"/>
                 </xsl:otherwise>
             </xsl:choose>
-            <xsl:apply-templates select="gmd:organisationName/gco:CharacterString[text()]" mode="vcard"/>
-            <xsl:apply-templates select="gmd:individualName/gco:CharacterString[text()]" mode="vcard"/>
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:address/*/gmd:electronicMailAddress/gco:CharacterString[not(contains(text, ';') or contains(text, ',') or contains(text, ' '))]" mode="vcard"/>
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:phone/*/gmd:voice/*[text()]"  mode="vcard"/>
             <xsl:apply-templates select="gmd:contactInfo/*/gmd:onlineResource/*/gmd:linkage/*[text()]" mode="vcard"/>
@@ -574,11 +565,7 @@
         </rdf:Description>
     </xsl:template>
 
-    <xsl:template match="gmd:organisationName/gco:CharacterString" mode="vcard">
-        <vcard:organization-name><xsl:value-of select="."/></vcard:organization-name>
-    </xsl:template>
-
-    <xsl:template match="gmd:individualName/gco:CharacterString" mode="vcard">
+    <xsl:template match="gmd:organisationName/gco:CharacterString|gmd:individualName/gco:CharacterString" mode="vcard">
         <vcard:fn><xsl:value-of select="."/></vcard:fn>
     </xsl:template>
 
