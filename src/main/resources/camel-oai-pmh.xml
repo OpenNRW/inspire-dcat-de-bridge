@@ -31,10 +31,14 @@
 
         <!-- internal endpoint of processing route for csw catalogs -->
         <endpoint id="csw" uri="direct:csw"/>
+        <!-- internal endpoint of processing route for csw catalogs into DCAT catalogs (instead of OAI-PMH) -->
+        <endpoint id="catalog" uri="direct:catalog"/>
         <!-- internal endpoint of processing route for CKAN catalogs -->
         <endpoint id="ckan" uri="direct:ckan"/>
         <!-- internal endpoint of processing route for INSPIRE catalogs -->
         <endpoint id="inspire" uri="direct:inspire"/>
+        <!-- internal endpoint of processing route for INSPIRE catalogs into DCAT catalogs -->
+        <endpoint id="catalog-inspire" uri="direct:catalog-inspire"/>
         <!-- internal endpoint of processing route for INSPIRE catalogs via SOAP 1.1 -->
         <endpoint id="inspireSoap11" uri="direct:inspireSoap11"/>
         <!-- internal endpoint of processing route for INSPIRE catalogs via SOAP 1.2 -->
@@ -48,6 +52,7 @@
         <endpoint id="cswIds" uri="servlet:///gp-csw/listIdentifiers?matchOnUriPrefix=true"/>
         <endpoint id="cswRecords" uri="servlet:///gp-csw/listRecords?matchOnUriPrefix=true"/>
         <endpoint id="cswRecord" uri="servlet:///gp-csw/getRecord?matchOnUriPrefix=true"/>
+        <endpoint id="dcatCatalog" uri="servlet:///gp-csw/catalog.rdf"/>
 
         <!-- endpoint for harvester nrw ckan catalog -->
         <endpoint id="ckanHarvesters" uri="servlet:///gp-ckan?matchOnUriPrefix=true"/>
@@ -76,6 +81,8 @@
             <setHeader headerName="response_date">
                 <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
             </setHeader>
+            <removeHeader headerName="page"/>
+            <removeHeader headerName="cookie"/>
             <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->
             <setBody>
                 <constant>&lt;dummy/&gt;</constant>
@@ -215,6 +222,69 @@
             <to uri="direct:getCoupledServices"/>
         </route>
 
+        <!-- route for INSPIRE catalogs output as RDF catalog -->
+        <route>
+            <from ref="catalog-inspire"/>
+            <setHeader headerName="response_date">
+                <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
+            </setHeader>
+            <setHeader headerName="baseCatalogUri">
+                <simple>{{rdf.catalog.base.url}}</simple>
+            </setHeader>
+            <removeHeader headerName="resumptionToken"/>
+            <removeHeader headerName="cookie"/>
+            <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->
+            <setBody>
+                <constant>&lt;dummy/&gt;</constant>
+            </setBody>
+            <to uri="xslt:inspireRequest.xsl"/>
+            <to uri="log:input"/>
+            <choice>
+                <when>
+                    <!-- Only send a GetRecords request to the target catalog if we have not already created an OAI-PMH response -->
+                    <xpath>count(/oai:OAI-PMH) = 0</xpath>
+                    <setHeader headerName="CamelHttpMethod">
+                        <constant>POST</constant>
+                    </setHeader>
+                    <choice>
+                        <when>
+                            <simple>${header.soapVersion} == '1.1'</simple>
+                            <setHeader headerName="Content-Type">
+                                <constant>text/xml</constant>
+                            </setHeader>
+                        </when>
+                        <when>
+                            <simple>${header.soapVersion} == '1.2'</simple>
+                            <setHeader headerName="Content-Type">
+                                <constant>application/soap+xml</constant>
+                            </setHeader>
+                        </when>
+                        <otherwise>
+                            <setHeader headerName="Content-Type">
+                                <constant>application/xml</constant>
+                            </setHeader>
+                        </otherwise>
+                    </choice>
+                    <!-- Replaced dynamically with the target catalog URL -->
+                    <to uri="http://dummy?httpClient.soTimeout=180000"/>
+                    <!-- transform the GetRecordsResponse -->
+                    <choice>
+                        <when>
+                            <simple>${header.out} == null</simple>
+                            <to uri="xslt:inspireResponseDcatCatalog.xsl?uriResolverFactory=uriResolverFactory"/>
+                        </when>
+                        <when>
+                            <simple>${header.out} != 'csw'</simple>
+                            <to uri="xslt:inspireResponseDcatCatalog.xsl?uriResolverFactory=uriResolverFactory"/>
+                        </when>
+                    </choice>
+                </when>
+            </choice>
+            <setHeader headerName="Content-Type">
+                <constant>application/rdf+xml</constant>
+            </setHeader>
+        </route>
+
         <!-- management route for harvester types -->
         <route>
             <from ref="mgmtHarvesterTypes"/>
@@ -249,6 +319,30 @@
         </route>
 
         <route>
+            <from ref="catalog"/>
+            <setHeader headerName="CamelHttpUri">
+                <simple>{{db.item.csw.URL}}</simple>
+            </setHeader>
+            <setHeader headerName="CamelHttpPath">
+                <constant/>
+            </setHeader>
+            <choice>
+                <when>
+                    <simple>${header.metadataPrefix} == null</simple>
+                    <setHeader headerName="metadataPrefix">
+                        <simple>dcat_ap</simple>
+                    </setHeader>
+                </when>
+            </choice>
+            <recipientList>
+                <simple>catalog-inspire</simple>
+                <!-- If SOAP-specific settings are needed, add endpoints above and replace with:
+                <simple>catalog-{{db.item.csw.TYPE}}</simple>
+                -->
+            </recipientList>
+        </route>
+
+        <route>
             <from ref="cswHarvesters"/>
             <to ref="csw"/>
         </route>
@@ -275,6 +369,14 @@
                 <simple>GetRecord</simple>
             </setHeader>
             <to ref="csw"/>
+        </route>
+
+        <route>
+            <from ref="dcatCatalog"/>
+            <setHeader headerName="verb">
+                <simple>ListRecords</simple>
+            </setHeader>
+            <to ref="catalog"/>
         </route>
 
         <route>

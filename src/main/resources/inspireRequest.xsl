@@ -17,6 +17,7 @@
     <xsl:param name="until"/>
     <xsl:param name="set"/>
     <xsl:param name="resumptionToken"/>
+    <xsl:param name="page"/>
     <xsl:param name="soapVersion"/>
 
     <xsl:param name="response_date"/>
@@ -136,6 +137,14 @@
                         </xsl:call-template>
                     </xsl:otherwise>
                 </xsl:choose>
+            </xsl:when>
+            <xsl:when test="$page and number($page) > 1">
+                <xsl:variable name="startPosition" select="((number($page) - 1) * $recordsPerPage) + 1"/>
+                <xsl:call-template name="getRecords">
+                    <xsl:with-param name="startPosition" select="$startPosition"/>
+                    <xsl:with-param name="fromParam" select="$from"/>
+                    <xsl:with-param name="untilParam" select="$until"/>
+                </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:call-template name="getRecords">
