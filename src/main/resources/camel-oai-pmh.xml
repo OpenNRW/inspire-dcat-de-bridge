@@ -8,15 +8,17 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
-    <!-- spring property placeholder -->
-    <context:property-placeholder location="classpath:camel-oai-pmh.properties"/>
-
     <!-- spring camel bridge property placeholder -->
     <bean id="propertyConfigurer" class="org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer">
-        <property name="location" value="classpath:camel-oai-pmh.properties"/>
+        <property name="locations">
+            <list>
+                <value>classpath:camel-oai-pmh.properties</value>
+                <value>file:/opt/app/inspire-bridge/config/camel-oai-pmh.properties</value>
+            </list>
+        </property>
         <property name="ignoreResourceNotFound" value="true" />
         <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
-    </bean>
+     </bean>
 
     <!-- This configures HttpClient to trust all server certificates - there are several catalogs that use self-signed
      certificates. Remove this bean from the configuration if you require trusted HTTPS connections! -->

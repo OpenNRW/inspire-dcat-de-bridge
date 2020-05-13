@@ -117,7 +117,7 @@
 
     <xsl:template name="ckanget">
         <!--operation-->
-        <xsl:variable name="httpUrl">${db.item.ckan.URL}</xsl:variable>
+        <xsl:variable name="httpUrl">{{db.item.ckan.URL}}</xsl:variable>
         <xsl:variable name="httpUri">
             <xsl:choose>
                 <xsl:when test="$verb_lc=$verb_ListIdentifiers">
