@@ -8,8 +8,17 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
-    <!-- spring property placeholder -->
-    <context:property-placeholder location="classpath:camel-oai-pmh.properties"/>
+    <!-- spring camel bridge property placeholder -->
+    <bean id="propertyConfigurer" class="org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:camel-oai-pmh.properties</value>
+                <value>file:/opt/app/inspire-bridge/config/camel-oai-pmh.properties</value>
+            </list>
+        </property>
+        <property name="ignoreResourceNotFound" value="true" />
+        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+     </bean>
 
     <!-- This configures HttpClient to trust all server certificates - there are several catalogs that use self-signed
      certificates. Remove this bean from the configuration if you require trusted HTTPS connections! -->
@@ -158,7 +167,7 @@
             <convertBodyTo type="java.lang.String"/>
             <to uri="log:input"/>
             <setHeader headerName="CamelHttpUri">
-                <simple>${db.item.csw.URL}</simple>
+                <simple>{{db.item.csw.URL}}</simple>
             </setHeader>
             <choice>
                 <when>
@@ -224,7 +233,7 @@
         <route>
             <from ref="csw"/>
             <setHeader headerName="CamelHttpUri">
-                <simple>${db.item.csw.URL}</simple>
+                <simple>{{db.item.csw.URL}}</simple>
             </setHeader>
             <setHeader headerName="CamelHttpPath">
                 <constant/>
@@ -238,7 +247,7 @@
                 </when>
             </choice>
             <recipientList>
-                <simple>${db.item.csw.TYPE}</simple>
+                <simple>{{db.item.csw.TYPE}}</simple>
             </recipientList>
         </route>
 
@@ -285,7 +294,7 @@
                 </when>
             </choice>
             <setHeader headerName="db.item.ckan.URL">
-                <simple>${db.item.ckan.URL}</simple>
+                <simple>{{db.item.ckan.URL}}</simple>
             </setHeader>
             <setBody>
                 <constant>&lt;dummy/&gt;</constant>
