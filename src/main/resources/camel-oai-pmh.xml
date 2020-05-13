@@ -75,6 +75,9 @@
             <setHeader headerName="response_date">
                 <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
             </setHeader>
+            <setHeader headerName="contributorID">
+                <simple>{{dcatde.contributorID}}</simple>
+            </setHeader>
             <removeHeader headerName="page"/>
             <removeHeader headerName="cookie"/>
             <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->
@@ -224,6 +227,9 @@
             </setHeader>
             <setHeader headerName="baseCatalogUri">
                 <simple>{{rdf.catalog.base.url}}</simple>
+            </setHeader>
+            <setHeader headerName="contributorID">
+                <simple>{{dcatde.contributorID}}</simple>
             </setHeader>
             <removeHeader headerName="resumptionToken"/>
             <removeHeader headerName="cookie"/>

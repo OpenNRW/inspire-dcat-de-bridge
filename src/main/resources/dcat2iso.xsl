@@ -13,7 +13,7 @@
                 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
                 xmlns:srv="http://www.isotc211.org/2005/srv"
                 xmlns:vcard="http://www.w3.org/2006/vcard/ns#"
-                xmlns:dcatde="http://dcat-ap.de/def/dcatde/1_0/"
+                xmlns:dcatde="http://dcat-ap.de/def/dcatde/"
                 exclude-result-prefixes="dcat dcatde dct foaf gml locn rdf rdfs vcard"
                 expand-text="true">
     <xsl:output method="xml"/>
