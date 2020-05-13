@@ -20,7 +20,7 @@
                 xmlns:xlink="http://www.w3.org/1999/xlink"
                 xmlns:cnt="http://www.w3.org/2011/content#"
                 xmlns:gmi="http://www.isotc211.org/2005/gmi"
-                xmlns:dcatde="http://dcat-ap.de/def/dcatde/1_0/"
+                xmlns:dcatde="http://dcat-ap.de/def/dcatde/"
                 xmlns:adms="http://www.w3.org/ns/adms#"
                 xmlns:org="http://www.w3.org/ns/org#"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -29,6 +29,9 @@
 
     <xsl:output method="xml"/>
 
+    <!-- Parameters from route -->
+    <xsl:param name="contributorID"/>
+
     <!--
     <xsl:strip-space elements="*"/>
     -->
@@ -36,9 +39,7 @@
     <xsl:variable name="c_no_limitation">keine</xsl:variable>
     <xsl:variable name="c_other_restrictions">otherRestrictions</xsl:variable>
 
-    <xsl:param name="resumptionToken">51:dcat_ap::</xsl:param>
     <xsl:variable name="tokeDcatAp">:dcat_ap:</xsl:variable>
-    <xsl:param name="metadataPrefix">dcat_ap</xsl:param>
     <xsl:variable name="prefixDcatAp">dcat_ap</xsl:variable>
 
     <xsl:variable name="mdrFileTypes" select="document('filetypes-skos.rdf')"/>
@@ -86,6 +87,9 @@
 
             <!--dct:description-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
+
+            <!-- dcatde:contributorID -->
+            <xsl:call-template name="contributorID"/>
 
             <!--dct:identifier-->
             <xsl:apply-templates select="gmd:fileIdentifier/gco:CharacterString"/>
@@ -148,6 +152,16 @@
 
             <xsl:call-template name="dcatTheme"/>
         </dcat:Dataset>
+    </xsl:template>
+
+    <xsl:template name="contributorID">
+        <xsl:if test="$contributorID">
+            <dcatde:contributorID>
+                <xsl:attribute name="rdf:resource">
+                    <xsl:value-of select="$contributorID"/>
+                </xsl:attribute>
+            </dcatde:contributorID>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template match="gmd:fileIdentifier/*">
