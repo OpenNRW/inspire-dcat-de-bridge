@@ -797,7 +797,7 @@
                 <dcat:downloadURL rdf:resource="{gmd:linkage/*}"/>
                 <dcat:accessURL rdf:resource="{gmd:linkage/*}"/>
                 <xsl:apply-templates select="../../../../gmd:transferOptions/*/gmd:onLine/*[gmd:function/*/@codeListValue='information' and gmd:linkage/*[text()]]"/>
-                <xsl:apply-templates select="ancestor::gmd:distributionInfo/*/gmd:distributionFormat[1]/*/gmd:name/gco:CharacterString[text()]"/>
+                <xsl:apply-templates select="gmd:applicationProfile/gco:CharacterString[text()] | ancestor::gmd:distributionInfo/*/gmd:distributionFormat[1]/*/gmd:name/gco:CharacterString[text()]"/>
                 <xsl:call-template name="constraints"/>
             </dcat:Distribution>
         </dcat:distribution>
@@ -1024,7 +1024,7 @@
         </xsl:call-template>
     </xsl:template>
 
-    <xsl:template match="gmd:distributionFormat/*/gmd:name/gco:CharacterString | gmd:distributorFormat/*/gmd:name/gco:CharacterString">
+    <xsl:template match="gmd:applicationProfile/gco:CharacterString | gmd:distributionFormat/*/gmd:name/gco:CharacterString | gmd:distributorFormat/*/gmd:name/gco:CharacterString">
         <xsl:variable name="formatName" select="text()"/>
         <xsl:variable name="formatNameUC" select="translate($formatName,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
         <xsl:variable name="mdrUri" select="$mdrFileTypes/*/skos:Concept[*/text() = $formatNameUC]/@rdf:about"/>
