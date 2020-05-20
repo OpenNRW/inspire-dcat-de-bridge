@@ -157,6 +157,12 @@
                         outputSchema="http://www.isotc211.org/2005/gmd">
             <csw:Query typeNames="gmd:MD_Metadata" xmlns:gmd="http://www.isotc211.org/2005/gmd">
                 <csw:ElementSetName>full</csw:ElementSetName>
+                <ogc:SortBy>
+                    <ogc:SortProperty>
+                        <ogc:PropertyName>apiso:Identifier</ogc:PropertyName>
+                        <ogc:SortOrder>ASC</ogc:SortOrder>
+                    </ogc:SortProperty>
+                </ogc:SortBy>
                 <csw:Constraint version="1.1.0">
                     <ogc:Filter>
                         <xsl:choose>
