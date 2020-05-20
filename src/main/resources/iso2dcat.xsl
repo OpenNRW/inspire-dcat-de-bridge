@@ -143,7 +143,6 @@
                 </xsl:otherwise>
             </xsl:choose>
 
-
             <xsl:apply-templates select="gmd:dataQualityInfo/*/gmd:report/*/gmd:result/gmd:DQ_ConformanceResult/gmd:specification/gmd:CI_Citation"/>
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceMaintenance/*/gmd:maintenanceAndUpdateFrequency/*/@codeListValue"/>
             <xsl:apply-templates select="gmd:hierarchyLevel"/>
@@ -439,9 +438,9 @@
     </xsl:template>
 
     <xsl:template match="gmd:CI_ResponsibleParty" mode="contactPoint">
-        <dcat:contactPoint>
-            <xsl:call-template name="vcardOrg"/>
-        </dcat:contactPoint>
+                    <dcat:contactPoint>
+                        <xsl:call-template name="vcardOrg"/>
+                    </dcat:contactPoint>
     </xsl:template>
 
     <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='publisher']">
@@ -449,15 +448,15 @@
     </xsl:template>
 
     <xsl:template match="gmd:CI_ResponsibleParty" mode="publisher">
-        <dct:publisher>
-            <xsl:call-template name="foafOrg"/>
-        </dct:publisher>
+                    <dct:publisher>
+                        <xsl:call-template name="foafOrg"/>
+                    </dct:publisher>
     </xsl:template>
 
     <xsl:template match="gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode/@codeListValue='custodian']">
-        <dcatde:maintainer>
-            <xsl:call-template name="foafOrg"/>
-        </dcatde:maintainer>
+                    <dcatde:maintainer>
+                        <xsl:call-template name="foafOrg"/>
+                    </dcatde:maintainer>
     </xsl:template>
 
     <xsl:template name="foafOrg">
@@ -1072,11 +1071,11 @@
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/*, 'GEMET - INSPIRE themes')]/gmd:keyword[1]/gco:CharacterString">
-        <xsl:call-template name="dcatKeyword"/>
+                <xsl:call-template name="dcatKeyword"/>
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[gmd:thesaurusName and not(starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/*, 'GEMET - INSPIRE themes'))]/gmd:keyword/gco:CharacterString">
-        <xsl:call-template name="dcatKeyword"/>
+                <xsl:call-template name="dcatKeyword"/>
     </xsl:template>
 
     <xsl:template name="dcatKeyword">
