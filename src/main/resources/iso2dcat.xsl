@@ -1035,7 +1035,7 @@
                     <xsl:with-param name="version" select="../../gmd:version/gco:CharacterString"/>
                 </xsl:call-template>
             </xsl:when>
-            <xsl:when test="$ianaMediaTypes/registry/file[text() = $formatName]">
+            <xsl:when test="$ianaMediaTypes/registry/registry/record/file[text() = $formatName]">
                 <dcat:mediaType rdf:resource="{concat('https://www.iana.org/assignments/media-types/', $formatName)}"/>
             </xsl:when>
             <xsl:otherwise>
