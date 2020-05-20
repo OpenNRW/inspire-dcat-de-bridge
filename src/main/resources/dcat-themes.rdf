@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<!-- refer to https://publications.europa.eu/en/web/eu-vocabularies/at-dataset/-/resource/dataset/data-theme/
+The following names are extracted from data-theme-skos.rdf vocabulary. -->
+    <dcatThemes>
+        <dcatTheme name="AGRI"/>
+        <dcatTheme name="EDUC"/>
+        <dcatTheme name="ENVI"/>
+        <dcatTheme name="ENER"/>
+        <dcatTheme name="TRAN"/>
+        <dcatTheme name="TECH"/>
+        <dcatTheme name="ECON"/>
+        <dcatTheme name="SOCI"/>
+        <dcatTheme name="HEAL"/>
+        <dcatTheme name="GOVE"/>
+        <dcatTheme name="REGI"/>
+        <dcatTheme name="JUST"/>
+        <dcatTheme name="INTR"/>
+    </dcatThemes>
+</rdf:RDF>

@@ -46,6 +46,7 @@
     <xsl:variable name="ianaMediaTypes" select="document('iana-media-types.xml')"/>
     <xsl:variable name="languageCodes" select="document('languageCodes.rdf')"/>
     <xsl:variable name="inspireThemes" select="document('themes.rdf')"/>
+    <xsl:variable name="dcatThemes" select="document('dcat-themes.rdf')"/>
 
     <xsl:variable name="inspire_md_codelist">http://inspire.ec.europa.eu/metadata-codelist/</xsl:variable>
 
@@ -993,7 +994,16 @@
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[not(gmd:thesaurusName)]/gmd:keyword/gco:CharacterString">
-        <xsl:call-template name="dcatKeyword"/>
+        <xsl:variable name="kwString" select="translate(text(),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
+        <xsl:variable name="listTheme" select="$dcatThemes/rdf:RDF/dcatThemes/dcatTheme[@name=$kwString]"/>
+        <xsl:choose>
+            <xsl:when test="$listTheme">
+                <dcat:theme rdf:resource="{concat('http://publications.europa.eu/resource/authority/data-theme/', $kwString)}"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="dcatKeyword"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/*[starts-with(gmd:thesaurusName/gmd:CI_Citation/gmd:title/*, 'GEMET - INSPIRE themes')]/gmd:keyword[position() &gt; 1]/gco:CharacterString">
