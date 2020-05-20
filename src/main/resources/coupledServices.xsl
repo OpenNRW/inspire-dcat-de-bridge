@@ -35,14 +35,14 @@
     </xsl:template>
 
     <xsl:template name="processRequest">
-        <csw:GetRecords startPosition="1" maxRecords="250" outputFormat="application/xml"
+        <csw:GetRecords startPosition="1" maxRecords="500" outputFormat="application/xml"
                         resultType="results" service="CSW" version="2.0.2"
                         outputSchema="http://www.isotc211.org/2005/gmd">
             <csw:Query typeNames="gmd:MD_Metadata" xmlns:gmd="http://www.isotc211.org/2005/gmd">
                 <csw:ElementSetName>full</csw:ElementSetName>
                 <csw:Constraint version="1.1.0">
                     <ogc:Filter>
-                        <xsl:variable name="ids" select="tokenize($resourceIdentifiers, '\|')"/>
+                        <xsl:variable name="ids" select="tokenize(replace($resourceIdentifiers, '%23', '#'), '\|')"/>
                         <xsl:choose>
                             <xsl:when test="count($ids) = 1">
                                 <ogc:PropertyIsEqualTo>

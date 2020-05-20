@@ -48,14 +48,14 @@
 
     <xsl:variable name="inspire_md_codelist">http://inspire.ec.europa.eu/metadata-codelist/</xsl:variable>
 
-    <xsl:variable name="resourceIdentifiers" select="string-join(/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*, '|')"/>
+    <xsl:variable name="resourceIdentifiers" select="replace(string-join(/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*, '|'), '#', '%23')"/>
     <xsl:variable name="coupledServicesUri">
         <xsl:value-of select="'direct:getCoupledServices'"/>
         <xsl:if test="/soapenv:Envelope" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
             <xsl:value-of select="'Soap11'"/>
         </xsl:if>
         <xsl:if test="/soap12:Envelope" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-            <xsl:value-of select="'Soap11'"/>
+            <xsl:value-of select="'Soap12'"/>
         </xsl:if>
         <xsl:value-of select="concat('?', $resourceIdentifiers)"/>
     </xsl:variable>
