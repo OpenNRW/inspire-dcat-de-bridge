@@ -657,11 +657,19 @@
     <xsl:template name="dataDistribution">
         <xsl:variable name="distributionLinks" select="gmd:distributionInfo/*/gmd:transferOptions/*/gmd:onLine/*[gmd:function/*/@codeListValue='download' and gmd:linkage/*[text()]]"/>
         <xsl:apply-templates select="$distributionLinks" mode="nrw"/>
+        <!-- read and store license information start -->
+        <xsl:variable name="accessConstraints" select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[gco:CharacterString != $c_no_limitation]"/>
+        <xsl:variable name="accessConstraintsJson" select="$accessConstraints[starts-with(normalize-space(gco:CharacterString), '{')]"/>
+        <!-- read and store license information end -->
         <xsl:variable name="resourceIdentifier" select="gmd:identificationInfo/*/gmd:citation/*/gmd:identifier/*/gmd:code/*"/>
-        <xsl:apply-templates select="$coupledServices/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata[gmd:identificationInfo/*/srv:operatesOn/@uuidref = $resourceIdentifier]" mode="serviceDistribution"/>
+        <!-- provide license information from metadata as fallback, if available -->
+        <xsl:apply-templates select="$coupledServices/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata[gmd:identificationInfo/*/srv:operatesOn/@xlink:href = $resourceIdentifier or gmd:identificationInfo/*/srv:operatesOn/@uuidref = $resourceIdentifier]" mode="serviceDistribution">
+            <xsl:with-param name="licenseInMainMetadata" select="if (count($accessConstraintsJson) &gt; 0) then $accessConstraintsJson[1] else null"/>
+        </xsl:apply-templates>
     </xsl:template>
 
     <xsl:template match="gmd:MD_Metadata" mode="serviceDistribution">
+        <xsl:param name="licenseInMainMetadata"/>
         <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
         <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
         <xsl:variable name="accessUrl">
@@ -683,7 +691,9 @@
                 <dcat:accessURL rdf:resource="{$accessUrl}"/>
                 <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"
                     mode="serviceDistribution"/>
-                <xsl:call-template name="constraints"/>
+                <xsl:call-template name="constraints">
+                    <xsl:with-param name="licenseInMainMetadata" select="$licenseInMainMetadata"/>
+                </xsl:call-template>
             </dcat:Distribution>
         </dcat:distribution>
     </xsl:template>
@@ -824,16 +834,50 @@
 
 
     <xsl:template name="constraints">
+        <xsl:param name="licenseInMainMetadata"/>
         <xsl:variable name="accessConstraints" select="ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[gco:CharacterString != $c_no_limitation]"/>
         <xsl:variable name="accessConstraintsJson" select="$accessConstraints[starts-with(normalize-space(gco:CharacterString), '{')]"/>
         <xsl:choose>
             <xsl:when test="count($accessConstraintsJson) &gt; 0">
+                <!-- dct:license -->
                 <xsl:apply-templates select="$accessConstraintsJson[1]" mode="license"/>
+                <!-- dcatde:licenseAttributionByText -->
+                <xsl:call-template name="licenseAttributionByText">
+                    <xsl:with-param name="accessConstraintsJson" select="$accessConstraintsJson[1]"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:when test="$licenseInMainMetadata">
+                <!-- dct:license -->
+                <xsl:apply-templates select="$licenseInMainMetadata" mode="license"/>
+                <!-- dcatde:licenseAttributionByText -->
+                <xsl:call-template name="licenseAttributionByText">
+                    <xsl:with-param name="accessConstraintsJson" select="$licenseInMainMetadata"/>
+                </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
+                <!-- dct:license -->
                 <xsl:apply-templates select="$accessConstraints[1]" mode="license"/>
             </xsl:otherwise>
         </xsl:choose>
+    </xsl:template>
+
+    <xsl:template name="licenseAttributionByText">
+        <xsl:param name="accessConstraintsJson"/>
+        <xsl:if test="$accessConstraintsJson">
+            <xsl:variable name="byText">
+                <xsl:if test="starts-with(normalize-space($accessConstraintsJson), '{')">
+                    <xsl:variable name="jsonWithQuelle" select="substring-after($accessConstraintsJson, '&quot;quelle&quot;')"/>
+                    <xsl:variable name="quelle" select="substring-before(substring-after($jsonWithQuelle, '&quot;'), '&quot;')"/>
+                    <xsl:value-of select="$quelle" />
+                </xsl:if>
+            </xsl:variable>
+            <xsl:if test="$byText">
+                <dcatde:licenseAttributionByText>
+                    <xsl:call-template name="xmlLang"/>
+                    <xsl:value-of select="$byText"/>
+                </dcatde:licenseAttributionByText>
+            </xsl:if>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template match="gmd:resourceConstraints/*/gmd:useLimitation">
@@ -900,6 +944,8 @@
             <xsl:choose>
                 <xsl:when test="$licenseId = 'cc-by-4.0'">cc-by/4.0</xsl:when>
                 <xsl:when test="$licenseId = 'dl-de-by-2.0'">dl-by-de/2.0</xsl:when>
+                <xsl:when test="$licenseId = 'dl-de/by-2.0'">dl-by-de/2.0</xsl:when>
+                <xsl:when test="$licenseId = 'dl-de/by-2-0'">dl-by-de/2.0</xsl:when>
                 <xsl:when test="$licenseId = 'cc-by-nd-4.0'">cc-by-nd/4.0</xsl:when>
                 <!-- from here on the mapping is unconfirmed -->
                 <xsl:when test="$licenseId = 'cc-by-de-3.0'">cc-by-de/3.0</xsl:when>
@@ -911,7 +957,9 @@
                 <xsl:when test="$licenseId = 'dl-de-by-1.0'">dl-by-de/1.0</xsl:when>
                 <xsl:when test="$licenseId = 'dl-by-nc-de-1.0'">dl-by-nc-de/1.0</xsl:when>
                 <xsl:when test="$licenseId = 'dl-zero-de/2.0'">dl-zero-de/2.0</xsl:when>
-                <xsl:when test="$licenseId = 'geoNutz-20130319'">geoNutz/20130319</xsl:when>
+                <xsl:when test="$licenseId = 'geoNutz-20130319'">geonutz/20130319</xsl:when>
+                <xsl:when test="$licenseId = 'geoNutz/20130319'">geonutz/20130319</xsl:when>
+                <xsl:when test="$licenseId = 'geonutzv-de-2013-03-19'">geonutz/20130319</xsl:when>
                 <xsl:when test="$licenseId = 'geoNutz-20131001'">geoNutz/20131001</xsl:when>
                 <xsl:when test="$licenseId = 'gpl-3.0'">gpl/3.0</xsl:when>
                 <xsl:otherwise>
