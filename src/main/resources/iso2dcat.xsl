@@ -735,14 +735,28 @@
             <dcat:Distribution rdf:about="{gmd:linkage/*}#distribution">
                 <xsl:variable name="linkage" select="string(gmd:linkage/*)"/>
                 <xsl:choose>
-                    <xsl:when test="gmd:name/*[text() != '']">
+                    <xsl:when test="gmd:name/*[text() != ''] | gmd:description/*[text() != '']">
                         <dct:title>
                             <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="gmd:name/*"/>
+                            <xsl:choose>
+                                <xsl:when test="gmd:name/*[text() != '']">
+                                    <xsl:value-of select="gmd:name/*"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="gmd:description/*"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
                         </dct:title>
                         <dct:description>
                             <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="gmd:name/*"/>
+                            <xsl:choose>
+                                <xsl:when test="gmd:description/*[text() != '']">
+                                    <xsl:value-of select="gmd:description/*"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="gmd:name/*"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
                         </dct:description>
                     </xsl:when>
                     <xsl:when test="starts-with($linkage, 'http') and contains($linkage, '?')">
