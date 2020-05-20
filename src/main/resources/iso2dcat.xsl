@@ -662,31 +662,30 @@
     </xsl:template>
 
     <xsl:template match="gmd:MD_Metadata" mode="serviceDistribution">
+        <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
+        <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
+        <xsl:variable name="accessUrl">
+            <xsl:if test="count($capabilitiesLinkage) &gt; 0">
+                <xsl:variable name="ogcServiceType" select="if (lower-case($serviceType) = 'view') then 'WMS' else if (lower-case($serviceType) = 'download') then 'WFS' else $serviceType"/>
+                <xsl:value-of select="if (ends-with(normalize-space($capabilitiesLinkage[1]), '?')) then concat(normalize-space($capabilitiesLinkage[1]), 'REQUEST=GetCapabilities&amp;SERVICE=', $ogcServiceType) else normalize-space($capabilitiesLinkage[1])"/>
+            </xsl:if>
+            <xsl:if test="count($capabilitiesLinkage) = 0">
+                <xsl:value-of select="gmd:identificationInfo[1]/*/srv:containsOperations[1]/*/srv:connectPoint/*/gmd:linkage/*"/>
+            </xsl:if>
+        </xsl:variable>
         <dcat:distribution>
-            <dcat:Distribution>
+            <dcat:Distribution rdf:about="{$accessUrl}#distribution">
                 <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
                 <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
-                <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
                 <xsl:call-template name="dctFormat">
                     <xsl:with-param name="format" select="if ($serviceType = '') then 'Unbekannt' else $serviceType"/>
                 </xsl:call-template>
-                <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
-                <xsl:if test="count($capabilitiesLinkage) &gt; 0">
-                    <xsl:variable name="ogcServiceType" select="if (lower-case($serviceType) = 'view') then 'WMS' else if (lower-case($serviceType) = 'download') then 'WFS' else $serviceType"/>
-                    <dcat:accessURL rdf:resource="{if (ends-with(normalize-space($capabilitiesLinkage[1]), '?')) then concat(normalize-space($capabilitiesLinkage[1]), 'REQUEST=GetCapabilities&amp;SERVICE=', $ogcServiceType) else normalize-space($capabilitiesLinkage[1])}"/>
-                </xsl:if>
-                <xsl:if test="count($capabilitiesLinkage) = 0">
-                    <xsl:apply-templates select="gmd:identificationInfo[1]/*/srv:containsOperations[1]/*/srv:connectPoint/*/gmd:linkage/*"/>
-                </xsl:if>
+                <dcat:accessURL rdf:resource="{$accessUrl}"/>
                 <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"
                     mode="serviceDistribution"/>
                 <xsl:call-template name="constraints"/>
             </dcat:Distribution>
         </dcat:distribution>
-    </xsl:template>
-
-    <xsl:template match="srv:connectPoint/*/gmd:linkage/*">
-        <dcat:accessURL rdf:resource="{.}"/>
     </xsl:template>
 
     <xsl:template
@@ -723,7 +722,7 @@
 
     <xsl:template match="gmd:CI_OnlineResource" mode="nrw">
         <dcat:distribution>
-            <dcat:Distribution>
+            <dcat:Distribution rdf:about="{gmd:linkage/*}#distribution">
                 <xsl:variable name="linkage" select="string(gmd:linkage/*)"/>
                 <xsl:choose>
                     <xsl:when test="gmd:name/*[text() != '']">
