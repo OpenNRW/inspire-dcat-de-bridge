@@ -1,30 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<!-- refer to languages-skos.rdf at https://publications.europa.eu/en/web/eu-vocabularies/at-dataset/-/resource/dataset/language
+for a list containing all three types of codes -->
 <langCodes>
-    <langCode ckanCode="bg" cswCode="bul"/>
-    <langCode ckanCode="ga" cswCode="gle"/>
-    <langCode ckanCode="hr" cswCode="hrv"/>
-    <langCode ckanCode="it" cswCode="ita"/>
-    <langCode ckanCode="cs" cswCode="cze"/>
-    <langCode ckanCode="lv" cswCode="lav"/>
-    <langCode ckanCode="da" cswCode="dan"/>
-    <langCode ckanCode="lt" cswCode="lit"/>
-    <langCode ckanCode="nl" cswCode="dut"/>
-    <langCode ckanCode="mt" cswCode="mlt"/>
-    <langCode ckanCode="en" cswCode="eng"/>
-    <langCode ckanCode="pl" cswCode="pol"/>
-    <langCode ckanCode="et" cswCode="est"/>
-    <langCode ckanCode="pt" cswCode="por"/>
-    <langCode ckanCode="fi" cswCode="fin"/>
-    <langCode ckanCode="ro" cswCode="rum"/>
-    <langCode ckanCode="fr" cswCode="fre"/>
-    <langCode ckanCode="sk" cswCode="slo"/>
-    <langCode ckanCode="de" cswCode="ger"/>
-    <langCode ckanCode="sl" cswCode="slv"/>
-    <langCode ckanCode="el" cswCode="gre"/>
-    <langCode ckanCode="es" cswCode="spa"/>
-    <langCode ckanCode="hu" cswCode="hun"/>
-    <langCode ckanCode="sv" cswCode="swe"/>
-    <langCode ckanCode="is" cswCode="ice"/>
-    </langCodes>
+    <langCode ckanCode="bg" cswCode="bul" dctLangCode="bul"/>
+    <langCode ckanCode="ga" cswCode="gle" dctLangCode="gle"/>
+    <langCode ckanCode="hr" cswCode="hrv" dctLangCode="hrv"/>
+    <langCode ckanCode="it" cswCode="ita" dctLangCode="ita"/>
+    <langCode ckanCode="cs" cswCode="cze" dctLangCode="ces"/>
+    <langCode ckanCode="lv" cswCode="lav" dctLangCode="lav"/>
+    <langCode ckanCode="da" cswCode="dan" dctLangCode="dan"/>
+    <langCode ckanCode="lt" cswCode="lit" dctLangCode="lit"/>
+    <langCode ckanCode="nl" cswCode="dut" dctLangCode="nld"/>
+    <langCode ckanCode="mt" cswCode="mlt" dctLangCode="mlt"/>
+    <langCode ckanCode="en" cswCode="eng" dctLangCode="eng"/>
+    <langCode ckanCode="pl" cswCode="pol" dctLangCode="pol"/>
+    <langCode ckanCode="et" cswCode="est" dctLangCode="est"/>
+    <langCode ckanCode="pt" cswCode="por" dctLangCode="por"/>
+    <langCode ckanCode="fi" cswCode="fin" dctLangCode="fin"/>
+    <langCode ckanCode="ro" cswCode="rum" dctLangCode="ron"/>
+    <langCode ckanCode="fr" cswCode="fre" dctLangCode="fra"/>
+    <langCode ckanCode="sk" cswCode="slo" dctLangCode="slk"/>
+    <langCode ckanCode="de" cswCode="ger" dctLangCode="deu"/>
+    <langCode ckanCode="sl" cswCode="slv" dctLangCode="slv"/>
+    <langCode ckanCode="el" cswCode="gre" dctLangCode="ell"/>
+    <langCode ckanCode="es" cswCode="spa" dctLangCode="spa"/>
+    <langCode ckanCode="hu" cswCode="hun" dctLangCode="hun"/>
+    <langCode ckanCode="sv" cswCode="swe" dctLangCode="swe"/>
+    <langCode ckanCode="is" cswCode="ice" dctLangCode="isl"/>
+</langCodes>
 </rdf:RDF>

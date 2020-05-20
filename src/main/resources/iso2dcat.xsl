@@ -1198,7 +1198,16 @@
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <dct:language rdf:resource="{concat('http://publications.europa.eu/resource/authority/language/', translate($code,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'))}"/>
+        <xsl:variable name="lang" select="$languageCodes/rdf:RDF/langCodes/langCode[@cswCode=$code]"/>
+        <xsl:variable name="euListCode">
+            <xsl:choose>
+                <xsl:when test="$lang">
+                    <xsl:value-of select="$lang/@dctLangCode"/>
+                </xsl:when>
+                <xsl:otherwise>deu</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <dct:language rdf:resource="{concat('http://publications.europa.eu/resource/authority/language/', translate($euListCode,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'))}"/>
     </xsl:template>
 
     <xsl:template name="xmlLang">
