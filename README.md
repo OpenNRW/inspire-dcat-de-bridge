@@ -6,13 +6,13 @@ Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal 
 * Provides an OAI-PMH interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs) and returns it in DCAT-AP.DE 1.0.1 schema as used in Open.NRW
 * Provides a DCAT-AP.de RDF XML catalog interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs)
 * Provides an OAI-PMH interface to harvest DCAT-AP.DE 1.0.1 metadata from CKAN and returns it in ISO 19139 schema (STILL WORK IN PROGRESS)
-* Deployed as a web application in Java servlet container
+* Can be directly started using an embedded Tomcat server, or deployed as a web application in Java servlet container
 * Implementation is based on Apache Camel
 
 ##### Requirements
 
 * JRE 8
-* Tomcat 8
+* Tomcat 8 (only when deploying in an external Tomcat installation)
 
 ##### Building with Apache Maven
 
@@ -28,15 +28,20 @@ Use your preferred method to deploy the webapp in Tomcat, e.g.:
 * Copy the war file to the Tomcat webapps folder
 * Create a context file in the Tomcat host folder
 
+##### Start Application with embedded Tomcat
+
+Instead a deployment in an external Tomcat installation it is also possible to start the application in an embedded Tomcat with the Spring Boot Application. In the following example the embedded Tomcat will be started on port 8089
+
+        /usr/bin/java -jar inspire-bridge.war --server.port=8089
+
 ##### Configuration
 
 Logging can be configured with the log4j framework (see http://logging.apache.org/log4j/1.2/).
-By default a logfile is created here: tomcat/logs/open-nrw-ci-fassaden.log.
+By default a logfile is created here: /var/log/inspire-bridge/inspire-bridge.log.
 
-If you build with the env-dev profile, you can set your parameters during build, by including a build.poperties
-file in the modile base directory. Please check the pom.xml
-to see how parameters are set. The parameters can be changed after deployment in the file
-camel-oai-pmh.properties. The available parameters are:
+In general, configuration is done via Spring properties. The parameters can be changed after deployment in the file camel-oai-pmh.properties. It is also possible to add a configuration file at `/opt/app/inspire-bridge/config/camel-oai-pmh.properties`. This is useful in combination with the embedded Tomcat, because the configuration file on classpath is within the war file. The properties defined in the configuration file in the classpath will be overridden.
+
+The available parameters in the camel-oai-pmh.properties file are:
 
 * oai-pmh.base.url.external: URL that external clients use to access the OAI-PMH interface web application
 * rdf.catalog.base.url: Endpoint where the DCAT-AP.de RDF catalog should be reachable
@@ -45,6 +50,10 @@ camel-oai-pmh.properties. The available parameters are:
 * db.item.csw.URL: GetRecords URL of the geoportal to be harvested
 * db.item.ckan.TYPE: currently only ckan is supported
 * db.item.ckan.URL: CKAN catalog URL to be harvested
+
+If you build with the env-dev profile, you can also set some parameters during build, by including a build.poperties
+file in the modile base directory. Please check the pom.xml and camel-oai-pmh.properties
+to see how parameters are set.
 
 Note on HTTPS: There are a few catalogs that use HTTPS connections. However, some use self-signed certificates, or
 certificates from a CA that is not trusted by the JVM per default. In order to allow integration of such catalogs,
