@@ -4,6 +4,7 @@ Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal 
 ##### Overview
 
 * Provides an OAI-PMH interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs) and returns it in DCAT-AP.DE 1.0.1 schema as used in Open.NRW
+* Provides a DCAT-AP.de RDF XML catalog interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs)
 * Provides an OAI-PMH interface to harvest DCAT-AP.DE 1.0.1 metadata from CKAN and returns it in ISO 19139 schema (STILL WORK IN PROGRESS)
 * Deployed as a web application in Java servlet container
 * Implementation is based on Apache Camel
@@ -38,6 +39,8 @@ to see how parameters are set. The parameters can be changed after deployment in
 camel-oai-pmh.properties. The available parameters are:
 
 * oai-pmh.base.url.external: URL that external clients use to access the OAI-PMH interface web application
+* rdf.catalog.base.url: Endpoint where the DCAT-AP.de RDF catalog should be reachable
+* dcatde.contributorID: [dcatde:contributorID](https://www.dcat-ap.de/def/contributors/) which is to be inserted in all DCAT datasets
 * db.item.csw.TYPE: should be one of inspire, inspireSoap11 or inspireSoap11, depending on the protocol of the Geoportal
 * db.item.csw.URL: GetRecords URL of the geoportal to be harvested
 * db.item.ckan.TYPE: currently only ckan is supported
@@ -99,6 +102,16 @@ Operations arguments:
                 http://localhost:8080/omdf/gp-csw?verb=GetRecord&identifier=2c0b2365-347e-44aa-a1c8-a67b7ca5328e<br>
                 http://localhost:8080/omdf/gp-ckan?verb=GetRecord&identifier=d04a7b1e-3e60-4591-b04c-94912ac54afe
 
+##### DCAT-AP.de catalog
+
+In addition to the OAI-PMH endpoints, a DCAT-AP.de RDF XML catalog is available. It is exposed at the endpoint `gp-csw/catalog.rdf`. The URL which is to be included in the catalog (e.g. for paging) can be configured in `rdf.catalog.base.url`. This should be the URL from which the catalog is externally reachable.
+
+With the default properties, you can access the catalog on
+
+        http://localhost:8080/omdf/gp-csw/catalog.rdf
+
+The records are fetched in the same way and from the same portal as for the OAI-PMH endpoint. Only the output format is
+different, such that it can used with a DCAT-AP.de RDF harvester.
 
 ##### Further Reading
 
