@@ -21,6 +21,12 @@
 
     <!-- Camel context for this application -->
     <camelContext xmlns="http://camel.apache.org/schema/spring" xmlns:oai="http://www.openarchives.org/OAI/2.0/">
+        <properties>
+            <property key="http.proxyHost" value="{{http.proxyHost:}}"/>
+            <property key="http.proxyPort" value="{{http.proxyPort:}}"/>
+            <property key="http.nonProxyHosts" value="{{http.nonProxyHosts:}}"/>
+        </properties>
+
         <template id="template"/>
 
         <!-- internal endpoint of processing route for csw catalogs -->
