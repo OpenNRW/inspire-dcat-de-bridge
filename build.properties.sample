@@ -5,3 +5,5 @@ db.item.csw.URL=https://localhost:8080/soapServices/CSWStartup
 
 db.item.ckan.TYPE=ckan
 db.item.ckan.URL=https://localhost:9090
+
+dcatde.contributorID=http://dcat-ap.de/def/contributors/gdiDE
