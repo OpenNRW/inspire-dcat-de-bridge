@@ -1,9 +1,11 @@
 oai-pmh.base.url.external=http://localhost:8080/omdf
 
-db.item.csw.TYPE=inspire
-db.item.csw.URL=https://localhost:8080/soapServices/CSWStartup
+oai-pmh.db.item.csw.TYPE=inspire
+oai-pmh.db.item.csw.URL=https://localhost:8080/soapServices/CSWStartup
 
-db.item.ckan.TYPE=ckan
-db.item.ckan.URL=https://localhost:9090
+oai-pmh.db.item.ckan.TYPE=ckan
+oai-pmh.db.item.ckan.URL=https://localhost:9090
 
-dcatde.contributorID=http://dcat-ap.de/def/contributors/gdiDE
+oai-pmh.dcatde.contributorID=http://dcat-ap.de/def/contributors/gdiDE
+
+oai-pmh.log.file=${catalina.base}/logs/open-nrw-ci-fassaden.log

@@ -228,6 +228,11 @@
                     <artifactId>maven-dependency-plugin</artifactId>
                     <version>2.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                    <version>1.0.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -237,6 +242,14 @@
         <spring.version>5.1.6.RELEASE</spring.version>
         <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
         <spring-framework.version>${spring.version}</spring-framework.version>
+
+        <oai-pmh.base.url.external>http://localhost:8080/omdf</oai-pmh.base.url.external>
+        <oai-pmh.db.item.csw.TYPE>inspire</oai-pmh.db.item.csw.TYPE>
+        <oai-pmh.db.item.csw.URL>https://localhost:8080/soapServices/CSWStartup</oai-pmh.db.item.csw.URL>
+        <oai-pmh.db.item.ckan.TYPE>ckan</oai-pmh.db.item.ckan.TYPE>
+        <oai-pmh.db.item.ckan.URL>https://localhost:9090</oai-pmh.db.item.ckan.URL>
+        <oai-pmh.dcatde.contributorID>http://dcat-ap.de/def/contributors/gdiDE</oai-pmh.dcatde.contributorID>
+        <oai-pmh.log.file>/var/log/inspire-bridge/inspire-bridge.log</oai-pmh.log.file>
     </properties>
     <profiles>
         <profile>
@@ -255,9 +268,25 @@
                 <local.configfile>${basedir}/build.properties</local.configfile>
             </properties>
             <build>
-                <filters>
-                    <filter>${local.configfile}</filter>
-                </filters>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>properties-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>read-project-properties</goal>
+                                </goals>
+                                <configuration>
+                                    <files>
+                                        <file>${local.configfile}</file>
+                                    </files>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
             </build>
         </profile>
     </profiles>
