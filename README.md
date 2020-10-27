@@ -38,21 +38,22 @@ Instead a deployment in an external Tomcat installation it is also possible to s
 
 Logging can be configured with the log4j framework (see http://logging.apache.org/log4j/1.2/).
 By default a logfile is created here: /var/log/inspire-bridge/inspire-bridge.log.
+The default location of the log file can be overwritten in the build.properties.
 
 In general, configuration is done via Spring properties. The parameters can be changed after deployment in the file camel-oai-pmh.properties. It is also possible to add a configuration file at `/opt/app/inspire-bridge/config/camel-oai-pmh.properties`. This is useful in combination with the embedded Tomcat, because the configuration file on classpath is within the war file. The properties defined in the configuration file in the classpath will be overridden.
 
 The available parameters in the camel-oai-pmh.properties file are:
 
 * oai-pmh.base.url.external: URL that external clients use to access the OAI-PMH interface web application
-* rdf.catalog.base.url: Endpoint where the DCAT-AP.de RDF catalog should be reachable
-* dcatde.contributorID: [dcatde:contributorID](https://www.dcat-ap.de/def/contributors/) which is to be inserted in all DCAT datasets
-* db.item.csw.TYPE: should be one of inspire, inspireSoap11 or inspireSoap11, depending on the protocol of the Geoportal
-* db.item.csw.URL: GetRecords URL of the geoportal to be harvested
-* db.item.ckan.TYPE: currently only ckan is supported
-* db.item.ckan.URL: CKAN catalog URL to be harvested
+* oai-pmh.rdf.catalog.base.url: Endpoint where the DCAT-AP.de RDF catalog should be reachable
+* oai-pmh.dcatde.contributorID: [dcatde:contributorID](https://www.dcat-ap.de/def/contributors/) which is to be inserted in all DCAT datasets
+* oai-pmh.db.item.csw.TYPE: should be one of inspire, inspireSoap11 or inspireSoap11, depending on the protocol of the Geoportal
+* oai-pmh.db.item.csw.URL: GetRecords URL of the geoportal to be harvested
+* oai-pmh.db.item.ckan.TYPE: currently only ckan is supported
+* oai-pmh.db.item.ckan.URL: CKAN catalog URL to be harvested
 
 If you build with the env-dev profile, you can also set some parameters during build, by including a build.poperties
-file in the modile base directory. Please check the pom.xml and camel-oai-pmh.properties
+file in the module base directory. Please check the pom.xml and camel-oai-pmh.properties
 to see how parameters are set.
 
 Note on HTTPS: There are a few catalogs that use HTTPS connections. However, some use self-signed certificates, or
