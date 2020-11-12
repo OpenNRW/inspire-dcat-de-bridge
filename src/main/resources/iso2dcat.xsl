@@ -122,7 +122,8 @@
             <!--dct:spatial-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement"/>
 
-            <!--dct:created dct:issued dct:modified-->
+            <!--dct:issued dct:modified-->
+            <xsl:apply-templates select="gmd:dateStamp"/>
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"/>
 
             <!--dcat:contactPoint dct:publisher dcatde:maintainer-->
@@ -396,7 +397,7 @@
 
     <xsl:template
         match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
-        <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
+        <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:dateStamp/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
             <dct:modified>
                 <xsl:call-template name="dateType"/>
                 <xsl:value-of select="."/>
@@ -412,16 +413,17 @@
 
     <xsl:template
         match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
-        <dct:modified>
-            <xsl:call-template name="dateType"/>
-            <xsl:value-of select="."/>
-        </dct:modified>
+        <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:dateStamp/*)">
+            <dct:modified>
+                <xsl:call-template name="dateType"/>
+                <xsl:value-of select="."/>
+            </dct:modified>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template
         match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]">
-        <xsl:if
-                test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*)">
+        <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:dateStamp/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*)">
             <dct:modified>
                 <xsl:call-template name="dateType"/>
                 <xsl:value-of select="."/>
