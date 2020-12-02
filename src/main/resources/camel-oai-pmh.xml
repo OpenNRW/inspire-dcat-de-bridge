@@ -93,6 +93,9 @@
             <setHeader headerName="contributorID">
                 <simple>{{dcatde.contributorID}}</simple>
             </setHeader>
+            <setHeader headerName="sortResults">
+                <simple>{{db.item.csw.sortResults}}</simple>
+            </setHeader>
             <removeHeader headerName="page"/>
             <removeHeader headerName="cookie"/>
             <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->

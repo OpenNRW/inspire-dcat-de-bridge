@@ -19,6 +19,7 @@
     <xsl:param name="resumptionToken"/>
     <xsl:param name="page"/>
     <xsl:param name="soapVersion"/>
+    <xsl:param name="sortResults"/>
 
     <xsl:param name="response_date"/>
 
@@ -193,12 +194,14 @@
                         </xsl:choose>
                     </ogc:Filter>
                 </csw:Constraint>
-                <ogc:SortBy>
-                    <ogc:SortProperty>
-                        <ogc:PropertyName>apiso:Identifier</ogc:PropertyName>
-                        <ogc:SortOrder>ASC</ogc:SortOrder>
-                    </ogc:SortProperty>
-                </ogc:SortBy>
+                <xsl:if test="$sortResults = 'true'">
+                    <ogc:SortBy>
+                        <ogc:SortProperty>
+                            <ogc:PropertyName>apiso:Identifier</ogc:PropertyName>
+                            <ogc:SortOrder>ASC</ogc:SortOrder>
+                        </ogc:SortProperty>
+                    </ogc:SortBy>
+                </xsl:if>
             </csw:Query>
         </csw:GetRecords>
     </xsl:template>
