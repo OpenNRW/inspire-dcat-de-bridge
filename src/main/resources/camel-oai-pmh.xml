@@ -100,6 +100,7 @@
                 <constant>&lt;dummy/&gt;</constant>
             </setBody>
             <to uri="xslt:inspireRequest.xsl"/>
+            <removeHeader headerName="CamelHttpQuery"/>
             <to uri="log:input"/>
             <choice>
                 <when>
