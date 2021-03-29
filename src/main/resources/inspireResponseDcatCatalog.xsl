@@ -25,7 +25,7 @@
                 xmlns:owl="http://www.w3.org/2002/07/owl#"
                 xmlns:cnt="http://www.w3.org/2011/content#"
                 xmlns:gmi="http://www.isotc211.org/2005/gmi"
-                xmlns:dcatde="http://dcat-ap.de/def/dcatde"
+                xmlns:dcatde="http://dcat-ap.de/def/dcatde/"
                 xmlns:adms="http://www.w3.org/ns/adms#"
                 xmlns:org="http://www.w3.org/ns/org#"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
