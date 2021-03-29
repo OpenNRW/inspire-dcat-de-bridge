@@ -250,6 +250,9 @@
             <setHeader headerName="contributorID">
                 <simple>{{dcatde.contributorID}}</simple>
             </setHeader>
+            <setHeader headerName="sortResults">
+                <simple>{{db.item.csw.sortResults}}</simple>
+            </setHeader>
             <removeHeader headerName="resumptionToken"/>
             <removeHeader headerName="cookie"/>
             <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->
@@ -257,6 +260,7 @@
                 <constant>&lt;dummy/&gt;</constant>
             </setBody>
             <to uri="xslt:inspireRequest.xsl"/>
+            <removeHeader headerName="CamelHttpQuery"/>
             <to uri="log:input"/>
             <choice>
                 <when>
