@@ -93,6 +93,9 @@
             <setHeader headerName="contributorID">
                 <simple>{{dcatde.contributorID}}</simple>
             </setHeader>
+            <setHeader headerName="cswServiceShowMetadataBaseUrl">
+                <simple>{{csw.serviceShowMetadata.URL}}</simple>
+            </setHeader>
             <setHeader headerName="sortResults">
                 <simple>{{db.item.csw.sortResults}}</simple>
             </setHeader>
@@ -249,6 +252,9 @@
             </setHeader>
             <setHeader headerName="contributorID">
                 <simple>{{dcatde.contributorID}}</simple>
+            </setHeader>
+            <setHeader headerName="cswServiceShowMetadataBaseUrl">
+                <simple>{{csw.serviceShowMetadata.URL}}</simple>
             </setHeader>
             <removeHeader headerName="resumptionToken"/>
             <removeHeader headerName="cookie"/>
