@@ -172,10 +172,7 @@
                     <!-- Concat with identifier -->
                     <xsl:attribute name="rdf:about"><xsl:value-of select="concat($metadataUri, '#', $identifier)"/></xsl:attribute>
                 </xsl:when>
-                <!-- Fallback with service url -->
-                <xsl:otherwise>
-                    <xsl:attribute name="rdf:about"><xsl:value-of select="concat($CamelHttpUri, '#', $identifier)"/></xsl:attribute>
-                </xsl:otherwise>
+                <!-- If no metadataUri is set the attribute rdf:about is not added -->
             </xsl:choose>
         </xsl:if>
     </xsl:template>
