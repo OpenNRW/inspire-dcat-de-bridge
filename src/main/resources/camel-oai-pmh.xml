@@ -253,6 +253,9 @@
             <setHeader headerName="contributorID">
                 <simple>{{dcatde.contributorID}}</simple>
             </setHeader>
+            <setHeader headerName="sortResults">
+                <simple>{{db.item.csw.sortResults}}</simple>
+            </setHeader>
             <setHeader headerName="cswServiceShowMetadataBaseUrl">
                 <simple>{{csw.serviceShowMetadata.URL}}</simple>
             </setHeader>
@@ -263,6 +266,7 @@
                 <constant>&lt;dummy/&gt;</constant>
             </setBody>
             <to uri="xslt:inspireRequest.xsl"/>
+            <removeHeader headerName="CamelHttpQuery"/>
             <to uri="log:input"/>
             <choice>
                 <when>
