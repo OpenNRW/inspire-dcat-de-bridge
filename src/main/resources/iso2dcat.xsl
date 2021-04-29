@@ -31,6 +31,8 @@
 
     <!-- Parameters from route -->
     <xsl:param name="contributorID"/>
+    <xsl:param name="cswServiceShowMetadataBaseUrl"/>
+    <xsl:param name="CamelHttpUri"/>
 
     <!--
     <xsl:strip-space elements="*"/>
@@ -41,6 +43,8 @@
 
     <xsl:variable name="tokeDcatAp">:dcat_ap:</xsl:variable>
     <xsl:variable name="prefixDcatAp">dcat_ap</xsl:variable>
+
+    <xsl:variable name="uidPlaceholder">%uid%</xsl:variable>
 
     <xsl:variable name="mdrFileTypes" select="document('filetypes-skos.rdf')"/>
     <xsl:variable name="ianaMediaTypes" select="document('iana-media-types.xml')"/>
@@ -65,6 +69,8 @@
 
     <xsl:template match="gmd:MD_Metadata|gmi:MI_Metadata">
         <dcat:Dataset>
+            <!--rdf:about-->
+            <xsl:call-template name="datasetURI"/>
             <!--dct:description-->
             <!--dct:title-->
             <!--dcatde:contributorID-->
@@ -152,6 +158,23 @@
 
             <xsl:call-template name="dcatTheme"/>
         </dcat:Dataset>
+    </xsl:template>
+
+    <xsl:template name="datasetURI">
+        <xsl:variable name="identifier" select="string(gmd:fileIdentifier/gco:CharacterString)"/>
+        <xsl:if test="$identifier">
+            <xsl:variable name="metadataUri" select="replace($cswServiceShowMetadataBaseUrl, ' ', '')"/>
+            <xsl:choose>
+                <xsl:when test="$metadataUri != '' and contains($metadataUri, $uidPlaceholder)">
+                    <xsl:attribute name="rdf:about"><xsl:value-of select="replace($metadataUri, $uidPlaceholder, $identifier)"/></xsl:attribute>
+                </xsl:when>
+                <xsl:when test="$metadataUri != ''">
+                    <!-- Concat with identifier -->
+                    <xsl:attribute name="rdf:about"><xsl:value-of select="concat($metadataUri, '#', $identifier)"/></xsl:attribute>
+                </xsl:when>
+                <!-- If no metadataUri is set the attribute rdf:about is not added -->
+            </xsl:choose>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template name="contributorID">

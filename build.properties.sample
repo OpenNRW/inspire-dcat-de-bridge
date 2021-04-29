@@ -8,4 +8,6 @@ oai-pmh.db.item.ckan.URL=https://localhost:9090
 
 oai-pmh.dcatde.contributorID=http://dcat-ap.de/def/contributors/gdiDE
 
+oai-pmh.csw.serviceShowMetadata.URL=https://localhost:8080/inspire/srv/eng/xml_iso19139?uuid=%uid%
+
 oai-pmh.log.file=${catalina.base}/logs/open-nrw-ci-fassaden.log

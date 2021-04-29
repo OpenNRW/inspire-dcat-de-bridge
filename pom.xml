@@ -236,6 +236,7 @@
         <oai-pmh.db.item.ckan.TYPE>ckan</oai-pmh.db.item.ckan.TYPE>
         <oai-pmh.db.item.ckan.URL>https://localhost:9090</oai-pmh.db.item.ckan.URL>
         <oai-pmh.dcatde.contributorID>http://dcat-ap.de/def/contributors/gdiDE</oai-pmh.dcatde.contributorID>
+        <oai-pmh.csw.serviceShowMetadata.URL></oai-pmh.csw.serviceShowMetadata.URL>
         <oai-pmh.log.file>/var/log/inspire-bridge/inspire-bridge.log</oai-pmh.log.file>
     </properties>
     <profiles>

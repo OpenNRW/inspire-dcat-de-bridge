@@ -47,6 +47,7 @@ The available parameters in the camel-oai-pmh.properties file are:
 * oai-pmh.base.url.external: URL that external clients use to access the OAI-PMH interface web application
 * oai-pmh.rdf.catalog.base.url: Endpoint where the DCAT-AP.de RDF catalog should be reachable
 * oai-pmh.dcatde.contributorID: [dcatde:contributorID](https://www.dcat-ap.de/def/contributors/) which is to be inserted in all DCAT datasets
+* oai-pmh.csw.serviceShowMetadata.URL: Base URL for the `rdf:about` attribute of DCAT Dataset elements. The URL may contain a placeholder of the form `%uid%`, which gets replaced by the dataset ID. If there is no placeholder, the ID gets appended with a "#".
 * oai-pmh.db.item.csw.TYPE: should be one of inspire, inspireSoap11 or inspireSoap11, depending on the protocol of the Geoportal
 * oai-pmh.db.item.csw.URL: GetRecords URL of the geoportal to be harvested
 * oai-pmh.db.item.csw.sortResults: toggle whether the results should be sorted or not. Possible values are `true` and `false`. Defaults to `false`.
