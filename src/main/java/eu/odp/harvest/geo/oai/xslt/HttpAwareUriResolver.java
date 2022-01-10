@@ -4,17 +4,18 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.xml.XsltUriResolver;
-import org.apache.camel.impl.DefaultExchange;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.camel.component.xslt.XsltUriResolver;
+import org.apache.camel.support.DefaultExchange;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamSource;
-import java.io.ByteArrayInputStream;
 
 /**
  * Resolves a document reference for protocols "http" or "https" in an XSL document with HTTP client.
@@ -25,7 +26,8 @@ public class HttpAwareUriResolver extends XsltUriResolver {
 
     private final static Logger LOG = Logger.getLogger(HttpAwareUriResolver.class);
 
-    private static HttpClient httpClient = new HttpClient(new MultiThreadedHttpConnectionManager());
+    private static HttpClient httpClient = HttpClients.custom()
+            .setConnectionManager(new PoolingHttpClientConnectionManager()).build();
     private ProducerTemplate template;
     private CamelContext context;
 
@@ -71,18 +73,11 @@ public class HttpAwareUriResolver extends XsltUriResolver {
         String[] parts = href.split("\\?");
         exchange.getIn().setHeader("resourceIdentifiers", parts[1]);
         template.send(parts[0], exchange);
-        return new StreamSource(exchange.getOut().getBody(java.io.InputStream.class));
+        return new StreamSource(exchange.getMessage().getBody(java.io.InputStream.class));
     }
 
     private Source resolveHttp(String href) throws Exception {
-        GetMethod method = new GetMethod(href);
-        try {
-            httpClient.executeMethod(method);
-            byte[] bytes = method.getResponseBody();
-            return new StreamSource(new ByteArrayInputStream(bytes));
-        }
-        finally {
-            method.releaseConnection();
-        }
+        HttpResponse response = httpClient.execute(new HttpGet(href));
+        return new StreamSource(response.getEntity().getContent());
     }
 }

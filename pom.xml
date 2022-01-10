@@ -53,6 +53,10 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring-xml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-core</artifactId>
         </dependency>
         <dependency>
@@ -96,20 +100,6 @@
             <artifactId>Saxon-HE</artifactId>
             <version>9.8.0-14</version>
         </dependency>
-        <!-- Explicitly add JAXB dependencies. Needed for newer Java versions.
-        See also https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j
-        -->
-        <!-- JAXB version corresponding to version used in Apache Camel -->
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>${jaxb.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
-            <version>1.1.1</version>
-        </dependency>
     </dependencies>
     <build>
         <resources>
@@ -126,10 +116,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.8.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -137,7 +126,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.1</version>
                 <configuration>
-                    <source>1.8</source>
+                    <source>1.11</source>
                     <minmemory>256m</minmemory>
                     <maxmemory>512m</maxmemory>
                 </configuration>
@@ -187,7 +176,7 @@
                 <plugin>
                     <artifactId>maven-war-plugin</artifactId>
                     <inherited>true</inherited>
-                    <version>2.2</version>
+                    <version>3.2.3</version>
                     <executions>
                         <execution>
                             <phase>package</phase>
@@ -223,11 +212,10 @@
         </pluginManagement>
     </build>
     <properties>
-        <camel.version>2.24.3</camel.version>
-        <jaxb.version>2.3.0</jaxb.version>
-        <spring.version>5.1.19.RELEASE</spring.version>
-        <spring-boot.version>2.1.18.RELEASE</spring-boot.version>
-        <spring-framework.version>${spring.version}</spring-framework.version>
+        <camel.version>3.14.0</camel.version>
+        <spring-boot.version>2.6.1</spring-boot.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <oai-pmh.base.url.external>http://localhost:8080/omdf</oai-pmh.base.url.external>
         <oai-pmh.db.item.csw.TYPE>inspire</oai-pmh.db.item.csw.TYPE>
