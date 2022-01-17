@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration>
+    <Appenders>
+        <RollingFile name="LOGFILE" fileName="${oai-pmh.log.file}" filePattern="${oai-pmh.log.file}%i">
+            <PatternLayout pattern="[%-5p] %d{ISO8601} [%t] %c - %m%n"/>
+            <SizeBasedTriggeringPolicy size="5 MB"/>
+            <DefaultRolloverStrategy max="3"/>
+        </RollingFile >
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="LOGFILE"/>
+        </Root>
+    </Loggers>
+</Configuration>

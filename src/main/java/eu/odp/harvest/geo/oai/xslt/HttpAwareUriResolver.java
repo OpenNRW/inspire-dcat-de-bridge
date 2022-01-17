@@ -11,7 +11,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -24,7 +25,7 @@ import javax.xml.transform.stream.StreamSource;
  */
 public class HttpAwareUriResolver extends XsltUriResolver {
 
-    private final static Logger LOG = Logger.getLogger(HttpAwareUriResolver.class);
+    private final static Logger LOG = LogManager.getLogger(HttpAwareUriResolver.class);
 
     private static HttpClient httpClient = HttpClients.custom()
             .setConnectionManager(new PoolingHttpClientConnectionManager()).build();
