@@ -22,7 +22,7 @@
 <div class="content">
     <div class="page-header"><a href="https://git.it.nrw.de/ref321/drupal/nrwgov/open.nrw-fassaden/blob/master/README.md" name="wikipage" id="wikipage" title="Click here to open the file on GitHub">README.md</a></div>
     <div class="hr"></div>
-    <h1 id="opennrw-fassaden-version-100-snapshot" md-pos="2-45"><a href="#opennrw-fassaden-version-100-snapshot" name="opennrw-fassaden-version-100-snapshot">open.nrw-fassaden (Version: 1.0.0-SNAPSHOT)</a></h1>
+    <h1 id="opennrw-fassaden-version-100-snapshot" md-pos="2-45"><a href="#opennrw-fassaden-version-100-snapshot" name="opennrw-fassaden-version-100-snapshot">open.nrw-fassaden (Version: 2.0.0)</a></h1>
     <p md-pos="46-142">Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal and vice versa.</p>
     <h5 id="overview" md-pos="149-157"><a href="#overview" name="overview">Overview</a></h5>
     <ul>
@@ -33,8 +33,8 @@
     </ul>
     <h5 id="requirements" md-pos="519-531"><a href="#requirements" name="requirements">Requirements</a></h5>
     <ul>
-        <li md-pos="533-541">JRE 8</li>
-        <li md-pos="541-552">Tomcat 8</li>
+        <li md-pos="533-541">JRE 11</li>
+        <li md-pos="541-552">Tomcat 9</li>
     </ul>
     <h5 id="building-with-apache-maven" md-pos="559-585"><a href="#building-with-apache-maven" name="building-with-apache-maven">Building with Apache Maven</a></h5>
     <ol>
@@ -67,14 +67,6 @@
         <li md-pos="1732-1786">db.item.ckan.TYPE: currently only ckan is supported</li>
         <li md-pos="1786-1839">db.item.ckan.URL: CKAN catalog URL to be harvested</li>
     </ul>
-    <p md-pos="1840-2576">Note on HTTPS: There are a few catalogs that use HTTPS connections. However, some use self-signed certificates, or
-        certificates from a CA that is not trusted by the JVM per default. In order to allow integration of such catalogs,
-        the Facades trusts all server certificates. Of course this is insecure, as it makes the harvester vulnerable
-        to man-in-the-middle attacks. But the same is true for catalogs that are connected via plain HTTP (ca. 90% of
-        catalogs), so this vulnerability is inherent as long as HTTP connections are allowed.
-        If you require trusted connections via HTTPS, just remove the bean
-        eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig from the Apache Camel Spring configuration
-        (/WEB-INF/classes/camel-oai-pmh.xml).</p>
     <h2 id="usage" md-pos="2580-2585"><a href="#usage" name="usage">Usage</a></h2>
     <h5 id="oai-pmh" md-pos="2593-2600"><a href="#oai-pmh" name="oai-pmh">OAI-PMH</a></h5>
     <p md-pos="2602-2704">Each Facades is exposed by a distinct HTTP endpoint. The endpoints are reached with this URL pattern:</p>

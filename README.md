@@ -1,4 +1,4 @@
-# open.nrw-fassaden (Version: 1.0.4)
+# open.nrw-fassaden (Version: 2.0.0)
 Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal and vice versa.
 
 ##### Overview
@@ -11,8 +11,8 @@ Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal 
 
 ##### Requirements
 
-* JRE 8
-* Tomcat 8 (only when deploying in an external Tomcat installation)
+* JRE 11
+* Tomcat 9 (only when deploying in an external Tomcat installation)
 
 ##### Building with Apache Maven
 
@@ -57,15 +57,6 @@ The available parameters in the camel-oai-pmh.properties file are:
 If you build with the env-dev profile, you can also set some parameters during build, by including a build.poperties
 file in the module base directory. Please check the pom.xml and camel-oai-pmh.properties
 to see how parameters are set.
-
-Note on HTTPS: There are a few catalogs that use HTTPS connections. However, some use self-signed certificates, or
-certificates from a CA that is not trusted by the JVM per default. In order to allow integration of such catalogs,
-the Facades trusts all server certificates. Of course this is insecure, as it makes the harvester vulnerable
-to man-in-the-middle attacks. But the same is true for catalogs that are connected via plain HTTP (ca. 90% of
-catalogs), so this vulnerability is inherent as long as HTTP connections are allowed.
-If you require trusted connections via HTTPS, just remove the bean
-eu.odp.harvest.geo.oai.http.AllowAllHttpClientConfig from the Apache Camel Spring configuration
-(/WEB-INF/classes/camel-oai-pmh.xml).
 
 ## Usage
 
