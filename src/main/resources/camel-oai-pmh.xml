@@ -77,9 +77,6 @@
             <setHeader name="response_date">
                 <simple>${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}</simple>
             </setHeader>
-            <setHeader name="contributorID">
-                <simple>{{dcatde.contributorID}}</simple>
-            </setHeader>
             <setHeader name="cswServiceShowMetadataBaseUrl">
                 <simple>{{csw.serviceShowMetadata.URL}}</simple>
             </setHeader>
