@@ -28,7 +28,9 @@ public class HttpAwareUriResolver extends XsltUriResolver {
     private final static Logger LOG = LogManager.getLogger(HttpAwareUriResolver.class);
 
     private static HttpClient httpClient = HttpClients.custom()
-            .setConnectionManager(new PoolingHttpClientConnectionManager()).build();
+            .setConnectionManager(new PoolingHttpClientConnectionManager())
+            .useSystemProperties()
+            .build();
     private ProducerTemplate template;
     private CamelContext context;
 

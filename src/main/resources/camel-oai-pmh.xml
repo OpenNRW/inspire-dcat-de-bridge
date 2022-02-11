@@ -122,7 +122,7 @@
                         </otherwise>
                     </choice>
                     <!-- Replaced dynamically with the target catalog URL -->
-                    <to uri="http://dummy?httpClient.SocketTimeout=180000"/>
+                    <to uri="http://dummy?httpClient.SocketTimeout=180000&amp;useSystemProperties=true"/>
                     <!-- transform the GetRecordsResponse -->
                     <choice>
                         <when>
@@ -201,7 +201,7 @@
             <setHeader name="CamelHttpMethod">
                 <constant>POST</constant>
             </setHeader>
-            <to uri="http://dummy?httpClient.SocketTimeout=180000"/>
+            <to uri="http://dummy?httpClient.SocketTimeout=180000&amp;useSystemProperties=true"/>
         </route>
 
         <!-- route for INSPIRE catalogs via SOAP 1.1 -->
@@ -282,7 +282,7 @@
                         </otherwise>
                     </choice>
                     <!-- Replaced dynamically with the target catalog URL -->
-                    <to uri="http://dummy?httpClient.SocketTimeout=180000"/>
+                    <to uri="http://dummy?httpClient.SocketTimeout=180000&amp;useSystemProperties=true"/>
                     <!-- transform the GetRecordsResponse -->
                     <choice>
                         <when>
@@ -442,7 +442,7 @@
                     <!--<removeHeader name="resumptionToken"/>-->
 
                     <!-- Replaced dynamically with the target catalog URL -->
-                    <to uri="http://dummy?httpClient.SocketTimeout=180000"/>
+                    <to uri="http://dummy?httpClient.SocketTimeout=180000&amp;useSystemProperties=true"/>
                     <!-- transform the csw -->
                     <convertBodyTo type="java.lang.String"/>
                     <setHeader name="json">
