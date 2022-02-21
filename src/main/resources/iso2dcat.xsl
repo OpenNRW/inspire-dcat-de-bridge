@@ -280,6 +280,14 @@
         </xsl:apply-templates>
     </xsl:template>
 
+    <xsl:template match="gmd:identificationInfo/*/gmd:citation/*/gmd:title/gco:CharacterString" mode="descriptionFallback">
+        <dct:description>
+            <xsl:call-template name="xmlLang"/>
+            <xsl:value-of select="."/>
+        </dct:description>
+        <xsl:apply-templates select="../gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString" mode="param"/>
+    </xsl:template>
+
     <xsl:template match="gmd:PT_FreeText/gmd:textGroup/gmd:LocalisedCharacterString" mode="param">
         <xsl:param name="mode" select="'description'"/>
         <xsl:variable name="localeRef" select="substring-after(@locale, '#')"/>
@@ -783,39 +791,9 @@
                             </xsl:choose>
                         </dct:description>
                     </xsl:when>
-                    <xsl:when test="starts-with($linkage, 'http') and contains($linkage, '?')">
-                        <dct:title>
-                            <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="$linkage"/>
-                        </dct:title>
-                        <dct:description>
-                            <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="$linkage"/>
-                        </dct:description>
-                    </xsl:when>
-                    <xsl:when test="contains(gmd:linkage/*, '/')">
-                        <dct:title>
-                            <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="tokenize($linkage,'/')[last()]"/>
-                        </dct:title>
-                        <dct:description>
-                            <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="tokenize($linkage,'/')[last()]"/>
-                        </dct:description>
-                    </xsl:when>
-                    <xsl:when test="contains(gmd:linkage/*, '\')">
-                        <dct:title>
-                            <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="tokenize($linkage,'\')[last()]"/>
-                        </dct:title>
-                        <dct:description>
-                            <xsl:call-template name="xmlLang"/>
-                            <xsl:value-of select="tokenize($linkage,'\')[last()]"/>
-                        </dct:description>
-                    </xsl:when>
                     <xsl:otherwise>
                         <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
-                        <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:abstract/gco:CharacterString[text()]"/>
+                        <xsl:apply-templates select="ancestor::gmd:MD_Metadata/gmd:identificationInfo/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]" mode="descriptionFallback"/>
                     </xsl:otherwise>
                 </xsl:choose>
                 <dcat:downloadURL rdf:resource="{gmd:linkage/*}"/>
