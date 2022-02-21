@@ -697,11 +697,14 @@
         <!-- provide license information from metadata as fallback, if available -->
         <xsl:apply-templates select="$coupledServices/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata[gmd:identificationInfo/*/srv:operatesOn/@xlink:href = $resourceIdentifier or gmd:identificationInfo/*/srv:operatesOn/@uuidref = $resourceIdentifier]" mode="serviceDistribution">
             <xsl:with-param name="licenseInMainMetadata" select="if (count($accessConstraintsJson) &gt; 0) then $accessConstraintsJson[1] else null"/>
+            <xsl:with-param name="lastModifiedInMainMetadata" select="gmd:dateStamp/*"/>
         </xsl:apply-templates>
     </xsl:template>
 
     <xsl:template match="gmd:MD_Metadata" mode="serviceDistribution">
         <xsl:param name="licenseInMainMetadata"/>
+        <xsl:param name="lastModifiedInMainMetadata"/>
+        <xsl:variable name="lastModified" select="gmd:dateStamp/*"/>
         <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
         <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
         <xsl:variable name="accessUrl">
@@ -721,8 +724,14 @@
                     <xsl:with-param name="format" select="if ($serviceType = '') then 'Unbekannt' else $serviceType"/>
                 </xsl:call-template>
                 <dcat:accessURL rdf:resource="{$accessUrl}"/>
-                <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"
-                    mode="serviceDistribution"/>
+                <xsl:choose>
+                    <xsl:when test="string($lastModified) > string($lastModifiedInMainMetadata)">
+                        <xsl:apply-templates select="$lastModified" mode="serviceDistribution"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:apply-templates select="$lastModifiedInMainMetadata" mode="serviceDistribution"/>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <xsl:call-template name="constraints">
                     <xsl:with-param name="licenseInMainMetadata" select="$licenseInMainMetadata"/>
                 </xsl:call-template>
@@ -730,36 +739,11 @@
         </dcat:distribution>
     </xsl:template>
 
-    <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
-        mode="serviceDistribution">
-        <xsl:if test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*)">
-            <dct:modified>
-                <xsl:call-template name="dateType"/>
-                <xsl:value-of select="."/>
-            </dct:modified>
-        </xsl:if>
-    </xsl:template>
-
-    <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
-        mode="serviceDistribution">
+    <xsl:template match="gmd:MD_Metadata/gmd:dateStamp/*" mode="serviceDistribution">
         <dct:modified>
             <xsl:call-template name="dateType"/>
             <xsl:value-of select="."/>
         </dct:modified>
-    </xsl:template>
-
-    <xsl:template
-        match="gmd:date/*[gmd:dateType/*/@codeListValue = 'creation']/gmd:date/*[text() castable as xs:date or text() castable as xs:dateTime]"
-        mode="serviceDistribution">
-        <xsl:if
-            test="not(ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'revision']/gmd:date/* or ancestor::gmd:MD_Metadata/gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue = 'publication']/gmd:date/*)">
-            <dct:modified>
-                <xsl:call-template name="dateType"/>
-                <xsl:value-of select="."/>
-            </dct:modified>
-        </xsl:if>
     </xsl:template>
 
     <xsl:template match="gmd:CI_OnlineResource" mode="nrw">
