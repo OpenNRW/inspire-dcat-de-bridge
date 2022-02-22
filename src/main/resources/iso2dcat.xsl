@@ -162,20 +162,24 @@
     </xsl:template>
 
     <xsl:template name="datasetURI">
-        <xsl:variable name="identifier" select="string(gmd:fileIdentifier/gco:CharacterString)"/>
-        <xsl:if test="$identifier">
-            <xsl:variable name="metadataUri" select="replace($cswServiceShowMetadataBaseUrl, ' ', '')"/>
-            <xsl:choose>
-                <xsl:when test="$metadataUri != '' and contains($metadataUri, $uidPlaceholder)">
-                    <xsl:attribute name="rdf:about"><xsl:value-of select="replace($metadataUri, $uidPlaceholder, $identifier)"/></xsl:attribute>
-                </xsl:when>
-                <xsl:when test="$metadataUri != ''">
-                    <!-- Concat with identifier -->
-                    <xsl:attribute name="rdf:about"><xsl:value-of select="concat($metadataUri, '#', $identifier)"/></xsl:attribute>
-                </xsl:when>
-                <!-- If no metadataUri is set the attribute rdf:about is not added -->
-            </xsl:choose>
-        </xsl:if>
+        <xsl:variable name="identifier" select="string(gmd:identificationInfo[1]/*/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString)"/>
+        <xsl:variable name="fileIdentifier" select="string(gmd:fileIdentifier/gco:CharacterString)"/>
+        <xsl:variable name="metadataUri" select="replace($cswServiceShowMetadataBaseUrl, ' ', '')"/>
+        <xsl:choose>
+            <xsl:when test="starts-with($identifier, 'http')">
+                <xsl:attribute name="rdf:about">
+                    <xsl:value-of select="$identifier"/>
+                </xsl:attribute>
+            </xsl:when>
+            <xsl:when test="$metadataUri != '' and contains($metadataUri, $uidPlaceholder)">
+                <xsl:attribute name="rdf:about"><xsl:value-of select="replace($metadataUri, $uidPlaceholder, $fileIdentifier)"/></xsl:attribute>
+            </xsl:when>
+            <xsl:when test="$metadataUri != ''">
+                <!-- Concat with identifier -->
+                <xsl:attribute name="rdf:about"><xsl:value-of select="concat($metadataUri, '#', $fileIdentifier)"/></xsl:attribute>
+            </xsl:when>
+            <!-- If no identifier is found and no metadataUri is set the attribute rdf:about is not added -->
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template name="contributorID">
