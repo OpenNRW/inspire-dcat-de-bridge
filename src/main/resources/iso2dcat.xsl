@@ -128,6 +128,9 @@
             <!--dct:spatial-->
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement"/>
 
+            <!--dct:temporal-->
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:temporalElement|gmd:identificationInfo/*/srv:extent/*/gmd:temporalElement"/>
+
             <!--dct:issued dct:modified-->
             <xsl:apply-templates select="gmd:dateStamp"/>
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:date/*[gmd:dateType/*/@codeListValue='publication' or gmd:dateType/*/@codeListValue='revision' or gmd:dateType/*/@codeListValue='creation']/gmd:date/*"/>
@@ -361,6 +364,24 @@
             </dct:spatial>
         </xsl:if>
     </xsl:template>
+
+    <xsl:template match="gmd:identificationInfo/*/gmd:extent/*/gmd:temporalElement|gmd:identificationInfo/*/srv:extent/*/gmd:temporalElement">
+            <dct:temporal>
+                <dct:PeriodOfTime>
+                    <xsl:if test="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:beginPosition">
+                        <schema:startDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
+                            <xsl:value-of select="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:beginPosition"/>
+                        </schema:startDate>
+                    </xsl:if>
+                    <xsl:if test="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:endPosition">
+                        <schema:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
+                            <xsl:value-of select="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:endPosition"/>
+                        </schema:endDate>
+                    </xsl:if>
+                </dct:PeriodOfTime>
+            </dct:temporal>
+    </xsl:template>
+
 
     <xsl:template match="gmd:extent/*/gmd:description/gco:CharacterString">
         <rdfs:label>
