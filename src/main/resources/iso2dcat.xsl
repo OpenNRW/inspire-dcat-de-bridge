@@ -731,10 +731,20 @@
         <xsl:param name="lastModifiedInMainMetadata"/>
         <xsl:variable name="lastModified" select="gmd:dateStamp/*"/>
         <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
+        <xsl:variable name="serviceTypeVersion" select="string(gmd:identificationInfo/*/srv:serviceTypeVersion/*)"/>
         <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
         <xsl:variable name="accessUrl">
             <xsl:if test="count($capabilitiesLinkage) &gt; 0">
-                <xsl:variable name="ogcServiceType" select="if (lower-case($serviceType) = 'view') then 'WMS' else if (lower-case($serviceType) = 'download') then 'WFS' else $serviceType"/>
+                <xsl:variable name="ogcServiceType">
+                    <xsl:choose>
+                        <xsl:when test="lower-case($serviceType) = 'view'">WMS</xsl:when>
+                        <xsl:when test="lower-case($serviceType) = 'download' and contains(lower-case($serviceTypeVersion), 'wcs')">WCS</xsl:when>
+                        <xsl:when test="lower-case($serviceType) = 'download'">WFS</xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$serviceType"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
                 <xsl:value-of select="if (ends-with(normalize-space($capabilitiesLinkage[1]), '?')) then concat(normalize-space($capabilitiesLinkage[1]), 'REQUEST=GetCapabilities&amp;SERVICE=', $ogcServiceType) else normalize-space($capabilitiesLinkage[1])"/>
             </xsl:if>
             <xsl:if test="count($capabilitiesLinkage) = 0">
