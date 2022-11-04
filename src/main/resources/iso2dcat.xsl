@@ -908,20 +908,13 @@
 
     <xsl:template name="licenseAttributionByText">
         <xsl:param name="accessConstraintsJson"/>
-        <xsl:if test="$accessConstraintsJson">
-            <xsl:variable name="byText">
-                <xsl:if test="starts-with(normalize-space($accessConstraintsJson), '{')">
-                    <xsl:variable name="jsonWithQuelle" select="substring-after($accessConstraintsJson, '&quot;quelle&quot;')"/>
-                    <xsl:variable name="quelle" select="substring-before(substring-after($jsonWithQuelle, '&quot;'), '&quot;')"/>
-                    <xsl:value-of select="$quelle" />
-                </xsl:if>
-            </xsl:variable>
-            <xsl:if test="$byText">
-                <dcatde:licenseAttributionByText>
-                    <xsl:call-template name="xmlLang"/>
-                    <xsl:value-of select="$byText"/>
-                </dcatde:licenseAttributionByText>
-            </xsl:if>
+        <xsl:if test="$accessConstraintsJson and starts-with(normalize-space($accessConstraintsJson), '{') and contains($accessConstraintsJson, '&quot;quelle&quot;')">
+            <xsl:variable name="jsonWithQuelle" select="substring-after($accessConstraintsJson, '&quot;quelle&quot;')"/>
+            <xsl:variable name="quelle" select="substring-before(substring-after($jsonWithQuelle, '&quot;'), '&quot;')"/>
+            <dcatde:licenseAttributionByText>
+                <xsl:call-template name="xmlLang"/>
+                <xsl:value-of select="$quelle" />
+            </dcatde:licenseAttributionByText>
         </xsl:if>
     </xsl:template>
 
