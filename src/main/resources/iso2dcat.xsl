@@ -732,6 +732,7 @@
         <xsl:variable name="lastModified" select="gmd:dateStamp/*"/>
         <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
         <xsl:variable name="serviceTypeVersion" select="string(gmd:identificationInfo/*/srv:serviceTypeVersion/*)"/>
+        <xsl:variable name="mdrUri" select="$mdrFileTypes/*/skos:Concept[*/text() = upper-case($serviceType)]/@rdf:about"/>
         <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
         <xsl:variable name="accessUrl">
             <xsl:if test="count($capabilitiesLinkage) &gt; 0">
@@ -755,9 +756,18 @@
             <dcat:Distribution rdf:about="{$accessUrl}#distribution">
                 <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:citation/*/gmd:title/gco:CharacterString[text()]"/>
                 <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:abstract/gco:CharacterString[text()]"/>
-                <xsl:call-template name="dctFormat">
-                    <xsl:with-param name="format" select="if ($serviceType = '') then 'Unbekannt' else $serviceType"/>
-                </xsl:call-template>
+                <xsl:choose>
+                    <xsl:when test="$mdrUri">
+                        <xsl:call-template name="dctFormat">
+                            <xsl:with-param name="format" select="$mdrUri"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:call-template name="dctFormat">
+                            <xsl:with-param name="format" select="if ($serviceType = '') then 'Unbekannt' else $serviceType"/>
+                        </xsl:call-template>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <dcat:accessURL rdf:resource="{$accessUrl}"/>
                 <xsl:choose>
                     <xsl:when test="string($lastModified) > string($lastModifiedInMainMetadata)">
@@ -1047,8 +1057,7 @@
 
     <xsl:template match="gmd:applicationProfile/gco:CharacterString | gmd:distributionFormat/*/gmd:name/gco:CharacterString | gmd:distributorFormat/*/gmd:name/gco:CharacterString">
         <xsl:variable name="formatName" select="text()"/>
-        <xsl:variable name="formatNameUC" select="translate($formatName,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
-        <xsl:variable name="mdrUri" select="$mdrFileTypes/*/skos:Concept[*/text() = $formatNameUC]/@rdf:about"/>
+        <xsl:variable name="mdrUri" select="$mdrFileTypes/*/skos:Concept[*/text() = upper-case($formatName)]/@rdf:about"/>
         <xsl:choose>
             <xsl:when test="$mdrUri">
                 <xsl:call-template name="dctFormat">
