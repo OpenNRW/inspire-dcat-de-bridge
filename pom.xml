@@ -155,6 +155,23 @@
                     <argLine>-Xms256m -Xmx256m</argLine>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>8.2.1</version>
+                <executions>
+                  <execution>
+                      <goals>
+                          <goal>check</goal>
+                      </goals>
+                  </execution>
+                </executions>
+                <configuration>
+                    <suppressionFiles>
+                        <suppressionFile>dependency-check-suppression.xml</suppressionFile>
+                    </suppressionFiles>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -223,9 +240,9 @@
         </pluginManagement>
     </build>
     <properties>
-        <camel.version>3.14.6</camel.version>
-        <spring-boot.version>2.6.11</spring-boot.version>
-        <log4j.version>2.19.0</log4j.version>
+        <camel.version>3.14.7</camel.version>
+        <spring-boot.version>2.7.11</spring-boot.version>
+        <log4j.version>2.20.0</log4j.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 

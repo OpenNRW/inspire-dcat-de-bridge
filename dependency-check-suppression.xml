@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- Java deserialization is not used for untrusted data, remote data is exclusively XML. //-->
+    <suppress>
+        <notes><![CDATA[
+        file name: spring-web-5.3.27.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-web@.*$</packageUrl>
+        <cve>CVE-2016-1000027</cve>
+    </suppress>
+    <!-- YAML parsing is not used for untrusted data, remote data is exclusively XML. //-->
+    <suppress>
+        <notes><![CDATA[
+        file name: snakeyaml-1.30.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
+        <cpe>cpe:/a:snakeyaml_project:snakeyaml</cpe>
+    </suppress>
+</suppressions>
