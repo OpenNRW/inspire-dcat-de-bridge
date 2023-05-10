@@ -3,9 +3,9 @@ Facades for open.nrw: Provide CKAN data to the catalog service of the Geoportal 
 
 ##### Overview
 
-* Provides an OAI-PMH interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs) and returns it in DCAT-AP.DE 1.0.1 schema as used in Open.NRW
+* Provides an OAI-PMH interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs) and returns it in DCAT-AP.de 2.0 schema as used in Open.NRW
 * Provides a DCAT-AP.de RDF XML catalog interface to harvest ISO 19139 metadata from CSW (INSPIRE catalogs)
-* Provides an OAI-PMH interface to harvest DCAT-AP.DE 1.0.1 metadata from CKAN and returns it in ISO 19139 schema
+* Provides an OAI-PMH interface to harvest DCAT-AP.de 2.0 metadata from CKAN and returns it in ISO 19139 schema
 * Can be directly started using an embedded Tomcat server, or deployed as a web application in Java servlet container
 * Implementation is based on Apache Camel
 
@@ -114,7 +114,7 @@ With the default properties, you can access the catalog on
         http://localhost:8080/omdf/gp-csw/catalog.rdf
 
 The records are fetched in the same way and from the same portal as for the OAI-PMH endpoint. Only the output format is
-different, such that it can used with a DCAT-AP.de RDF harvester.
+different, such that it can be used with a DCAT-AP.de RDF harvester.
 
 ##### Further Reading
 
