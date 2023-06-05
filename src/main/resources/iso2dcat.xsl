@@ -731,7 +731,8 @@
         <xsl:param name="lastModifiedInMainMetadata"/>
         <xsl:variable name="lastModified" select="gmd:dateStamp/*"/>
         <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
-        <xsl:variable name="serviceTypeVersion" select="string(gmd:identificationInfo/*/srv:serviceTypeVersion/*)"/>
+        <xsl:variable name="serviceTypeVersion" select="gmd:identificationInfo/*/srv:serviceTypeVersion/*"/>
+        <xsl:variable name="serviceTypeVersionContainsWCS" select="exists($serviceTypeVersion[contains(lower-case(string(.)), 'wcs')])"/>
         <xsl:variable name="mdrUri" select="$mdrFileTypes/*/skos:Concept[*/text() = upper-case($serviceType)]/@rdf:about"/>
         <xsl:variable name="capabilitiesLinkage" select="gmd:identificationInfo[1]/*/srv:containsOperations/*[lower-case(srv:operationName/*) = 'getcapabilities']/srv:connectPoint/*/gmd:linkage/*"/>
         <xsl:variable name="accessUrl">
@@ -739,7 +740,7 @@
                 <xsl:variable name="ogcServiceType">
                     <xsl:choose>
                         <xsl:when test="lower-case($serviceType) = 'view'">WMS</xsl:when>
-                        <xsl:when test="lower-case($serviceType) = 'download' and contains(lower-case($serviceTypeVersion), 'wcs')">WCS</xsl:when>
+                        <xsl:when test="lower-case($serviceType) = 'download' and $serviceTypeVersionContainsWCS">WCS</xsl:when>
                         <xsl:when test="lower-case($serviceType) = 'download'">WFS</xsl:when>
                         <xsl:otherwise>
                             <xsl:value-of select="$serviceType"/>
