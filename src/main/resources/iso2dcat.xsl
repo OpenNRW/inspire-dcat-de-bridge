@@ -373,14 +373,14 @@
             <dct:temporal>
                 <dct:PeriodOfTime>
                     <xsl:if test="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:beginPosition">
-                        <schema:startDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
+                        <dct:startDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
                             <xsl:value-of select="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:beginPosition"/>
-                        </schema:startDate>
+                        </dct:startDate>
                     </xsl:if>
                     <xsl:if test="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:endPosition">
-                        <schema:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
+                        <dct:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
                             <xsl:value-of select="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:endPosition"/>
-                        </schema:endDate>
+                        </dct:endDate>
                     </xsl:if>
                 </dct:PeriodOfTime>
             </dct:temporal>
