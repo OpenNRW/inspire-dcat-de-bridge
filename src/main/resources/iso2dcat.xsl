@@ -133,7 +133,7 @@
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:geographicElement|gmd:identificationInfo/*/srv:extent/*/gmd:geographicElement"/>
 
             <!--dct:temporal-->
-            <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:extent/*/gmd:temporalElement|gmd:identificationInfo/*/srv:extent/*/gmd:temporalElement"/>
+            <xsl:apply-templates select="gmd:identificationInfo[1]/*/*:extent/*/gmd:temporalElement/*/gmd:extent/*:TimePeriod[*:beginPosition/text() castable as xs:date or *:beginPosition/text() castable as xs:dateTime or *:endPosition/text() castable as xs:date or *:endPosition/text() castable as xs:dateTime]"/>
 
             <!--dct:issued dct:modified-->
             <xsl:apply-templates select="gmd:dateStamp"/>
@@ -369,23 +369,28 @@
         </xsl:if>
     </xsl:template>
 
-    <xsl:template match="gmd:identificationInfo/*/gmd:extent/*/gmd:temporalElement|gmd:identificationInfo/*/srv:extent/*/gmd:temporalElement">
-            <dct:temporal>
-                <dct:PeriodOfTime>
-                    <xsl:if test="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:beginPosition">
-                        <dct:startDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
-                            <xsl:value-of select="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:beginPosition"/>
-                        </dct:startDate>
-                    </xsl:if>
-                    <xsl:if test="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:endPosition">
-                        <dct:endDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">
-                            <xsl:value-of select="./gmd:EX_TemporalExtent/gmd:extent/*:TimePeriod/*:endPosition"/>
-                        </dct:endDate>
-                    </xsl:if>
-                </dct:PeriodOfTime>
-            </dct:temporal>
+    <xsl:template match="gmd:identificationInfo/*/*:extent/*/gmd:temporalElement/*/gmd:extent/*:TimePeriod">
+        <dct:temporal>
+            <dct:PeriodOfTime>
+                <xsl:apply-templates select="*:beginPosition[text() castable as xs:date or text() castable as xs:dateTime]"/>
+                <xsl:apply-templates select="*:endPosition[text() castable as xs:date or text() castable as xs:dateTime]"/>
+            </dct:PeriodOfTime>
+        </dct:temporal>
     </xsl:template>
 
+    <xsl:template match="*:beginPosition">
+        <dcat:startDate>
+            <xsl:call-template name="dateType"/>
+            <xsl:value-of select="."/>
+        </dcat:startDate>
+    </xsl:template>
+
+    <xsl:template match="*:endPosition">
+        <dcat:endDate>
+            <xsl:call-template name="dateType"/>
+            <xsl:value-of select="."/>
+        </dcat:endDate>
+    </xsl:template>
 
     <xsl:template match="gmd:extent/*/gmd:description/gco:CharacterString">
         <rdfs:label>
