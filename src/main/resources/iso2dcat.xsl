@@ -65,7 +65,11 @@
         </xsl:if>
         <xsl:value-of select="concat('?', $resourceIdentifiers)"/>
     </xsl:variable>
-    <xsl:variable name="coupledServices" select="document($coupledServicesUri)"/>
+    <xsl:variable name="coupledServices">
+        <xsl:if test="$resourceIdentifiers">
+            <xsl:copy-of select="document($coupledServicesUri)"/>
+        </xsl:if>
+    </xsl:variable>
 
     <xsl:template match="gmd:MD_Metadata|gmi:MI_Metadata">
         <dcat:Dataset>
