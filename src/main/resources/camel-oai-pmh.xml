@@ -191,7 +191,7 @@
                 </when>
                 <otherwise>
                     <setHeader name="Content-Type">
-                        <constant>application/xml</constant>
+                        <constant>application/xml;charset=UTF-8</constant>
                     </setHeader>
                 </otherwise>
             </choice>
