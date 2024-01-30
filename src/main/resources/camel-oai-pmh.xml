@@ -133,6 +133,7 @@
                     </choice>
                 </when>
             </choice>
+            <removeHeaders pattern="*"/>
             <setHeader name="Content-Type">
                 <constant>text/xml</constant>
             </setHeader>
@@ -293,6 +294,7 @@
                     </choice>
                 </when>
             </choice>
+            <removeHeaders pattern="*"/>
             <setHeader name="Content-Type">
                 <constant>application/rdf+xml</constant>
             </setHeader>
@@ -304,6 +306,7 @@
             <setBody>
                 <simple>resource:classpath:/harvester-types.xml</simple>
             </setBody>
+            <removeHeaders pattern="*"/>
             <setHeader name="Content-Type">
                 <constant>text/xml</constant>
             </setHeader>
@@ -413,7 +416,6 @@
             </setBody>
             <to uri="xslt:jsonPackageRequest.xsl"/>
             <to uri="log:input"/>
-
             <choice>
                 <when>
                     <!-- Only send a GetRecords request to the target catalog if we have not already created an OAI-PMH response -->
