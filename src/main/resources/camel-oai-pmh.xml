@@ -44,17 +44,17 @@
         <endpoint id="mgmtHarvesterTypes" uri="servlet:///mgmt/harvester-types"/>
 
         <!-- endpoint for harvester nrw csw catalog -->
-        <endpoint id="cswHarvesters" uri="servlet:///gp-csw?matchOnUriPrefix=true"/>
-        <endpoint id="cswIds" uri="servlet:///gp-csw/listIdentifiers?matchOnUriPrefix=true"/>
-        <endpoint id="cswRecords" uri="servlet:///gp-csw/listRecords?matchOnUriPrefix=true"/>
-        <endpoint id="cswRecord" uri="servlet:///gp-csw/getRecord?matchOnUriPrefix=true"/>
+        <endpoint id="cswHarvesters" uri="servlet:///gp-csw"/>
+        <endpoint id="cswIds" uri="servlet:///gp-csw/listIdentifiers"/>
+        <endpoint id="cswRecords" uri="servlet:///gp-csw/listRecords"/>
+        <endpoint id="cswRecord" uri="servlet:///gp-csw/getRecord"/>
         <endpoint id="dcatCatalog" uri="servlet:///gp-csw/catalog.rdf"/>
 
         <!-- endpoint for harvester nrw ckan catalog -->
-        <endpoint id="ckanHarvesters" uri="servlet:///gp-ckan?matchOnUriPrefix=true"/>
-        <endpoint id="ckanIds" uri="servlet:///gp-ckan/listIdentifiers?matchOnUriPrefix=true"/>
-        <endpoint id="ckanRecords" uri="servlet:///gp-ckan/listRecords?matchOnUriPrefix=true"/>
-        <endpoint id="ckanRecord" uri="servlet:///gp-ckan/getRecord?matchOnUriPrefix=true"/>
+        <endpoint id="ckanHarvesters" uri="servlet:///gp-ckan"/>
+        <endpoint id="ckanIds" uri="servlet:///gp-ckan/listIdentifiers"/>
+        <endpoint id="ckanRecords" uri="servlet:///gp-ckan/listRecords"/>
+        <endpoint id="ckanRecord" uri="servlet:///gp-ckan/getRecord"/>
 
         <onException>
             <exception>java.lang.Exception</exception>
