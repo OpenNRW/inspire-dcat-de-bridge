@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<!-- refer to http://data.europa.eu/bna/asd487ae75  -->
+    <hvdCategories>
+        <hvdCategory name="georaum" url="http://data.europa.eu/bna/c_ac64a52d"/>
+        <hvdCategory name="erdbeobachtung und umwelt" url="http://data.europa.eu/bna/c_dd313021"/>
+        <hvdCategory name="meteorologie" url="http://data.europa.eu/bna/c_164e0bf5"/>
+        <hvdCategory name="statistik" url="http://data.europa.eu/bna/c_e1da4e07"/>
+        <hvdCategory name="unternehmen und eigentümerschaft von unternehmen" url="http://data.europa.eu/bna/c_a9135398"/>
+        <hvdCategory name="mobilität" url="http://data.europa.eu/bna/c_b79e35eb"/>
+    </hvdCategories>
+</rdf:RDF>
