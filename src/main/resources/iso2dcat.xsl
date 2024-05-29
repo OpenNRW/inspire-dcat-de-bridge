@@ -7,6 +7,7 @@
                 xmlns:gco="http://www.isotc211.org/2005/gco"
                 xmlns:gmx="http://www.isotc211.org/2005/gmx"
                 xmlns:dcat="http://www.w3.org/ns/dcat#"
+                xmlns:dcatap="http://data.europa.eu/r5r/"
                 xmlns:foaf="http://xmlns.com/foaf/0.1/"
                 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
                 xmlns:skos="http://www.w3.org/2004/02/skos/core#"
@@ -51,6 +52,7 @@
     <xsl:variable name="languageCodes" select="document('languageCodes.rdf')"/>
     <xsl:variable name="inspireThemes" select="document('themes.rdf')"/>
     <xsl:variable name="dcatThemes" select="document('dcat-themes.rdf')"/>
+    <xsl:variable name="hvdCategories" select="document('hvd-categories.rdf')"/>
 
     <xsl:variable name="inspire_md_codelist">http://inspire.ec.europa.eu/metadata-codelist/</xsl:variable>
 
@@ -165,6 +167,16 @@
             <xsl:call-template name="dataDistribution"/>
 
             <xsl:call-template name="dcatTheme"/>
+
+            <!--dcatap:applicableLegislation dcatap:hvdCategory-->
+            <xsl:variable name="hvdKeywords" select="gmd:identificationInfo/*/gmd:descriptiveKeywords/gmd:MD_Keywords[
+                        (gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString = 'High-value dataset categories' or
+                        gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor/@xlink:href = 'http://data.europa.eu/bna/asd487ae75') and
+                        gmd:thesaurusName/gmd:CI_Citation/gmd:date/*[gmd:dateType/*/@codeListValue='publication']/gmd:date/*[text() castable as xs:date and xs:date(text()) >= xs:date('2023-09-27')]]"/>
+            <xsl:if test="$hvdKeywords">
+                <dcatap:applicableLegislation rdf:resource="http://data.europa.eu/eli/reg_impl/2023/138/oj"/>
+                <xsl:apply-templates select="$hvdKeywords" mode="hvd"/>
+            </xsl:if>
         </dcat:Dataset>
     </xsl:template>
 
@@ -1289,6 +1301,15 @@
         <xsl:if test="$keywords[.='INTR']">
             <dcat:theme rdf:resource="http://publications.europa.eu/resource/authority/data-theme/INTR"/>
         </xsl:if>
+    </xsl:template>
+
+    <xsl:template match="gmd:identificationInfo/*/gmd:descriptiveKeywords/gmd:MD_Keywords" mode="hvd">
+        <xsl:variable name="hvdCategoryKeywords" select="gmd:keyword/gco:CharacterString/lower-case(text())"/>
+        <xsl:variable name="hvdCategoryUrls" select="gmd:keyword/gmx:Anchor/@xlink:href"/>
+        <xsl:for-each select="$hvdCategories/rdf:RDF/hvdCategories/hvdCategory[@name=$hvdCategoryKeywords or @url=$hvdCategoryUrls]">
+            <xsl:variable name="hvdUrlString" select="string(@url)"/>
+            <dcatap:hvdCategory rdf:resource="{$hvdUrlString}"/>
+        </xsl:for-each>
     </xsl:template>
 
     <xsl:template match="gmd:language/*[@codeListValue]|gmd:language/gco:CharacterString">
