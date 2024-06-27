@@ -89,6 +89,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+            <version>5.3.37</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -222,13 +223,13 @@
                 <plugin>
                     <groupId>org.owasp</groupId>
                     <artifactId>dependency-check-maven</artifactId>
-                    <version>8.2.1</version>
+                    <version>9.2.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
     </build>
     <properties>
-        <camel.version>3.22.0</camel.version>
+        <camel.version>3.22.2</camel.version>
         <spring-boot.version>2.7.18</spring-boot.version>
         <log4j.version>2.20.0</log4j.version>
 

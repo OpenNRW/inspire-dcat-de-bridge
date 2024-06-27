@@ -14,6 +14,20 @@
         file name: snakeyaml-1.30.jar
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
-        <cpe>cpe:/a:snakeyaml_project:snakeyaml</cpe>
+        <vulnerabilityName>CVE-2022-1471</vulnerabilityName>
+        <vulnerabilityName>CVE-2022-25857</vulnerabilityName>
+        <vulnerabilityName>CVE-2022-38749</vulnerabilityName>
+        <vulnerabilityName>CVE-2022-38751</vulnerabilityName>
+        <vulnerabilityName>CVE-2022-38752</vulnerabilityName>
+        <vulnerabilityName>CVE-2022-41854</vulnerabilityName>
+        <vulnerabilityName>CVE-2022-38750</vulnerabilityName>
+    </suppress>
+    <!-- Problem exists for specially crafted objects that use cyclic dependencies. The steps of constructing a cyclic data structure and trying to serialize it cannot be achieved by an external attacker. -->
+    <suppress>
+        <notes><![CDATA[
+        file name: jackson-databind-2.13.5.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
+        <cve>CVE-2023-35116</cve>
     </suppress>
 </suppressions>
