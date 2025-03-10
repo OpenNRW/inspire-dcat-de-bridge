@@ -20,6 +20,7 @@
     <xsl:param name="page"/>
     <xsl:param name="soapVersion"/>
     <xsl:param name="sortResults"/>
+    <xsl:param name="hopCount"/>
 
     <xsl:param name="response_date"/>
 
@@ -165,6 +166,9 @@
                         startPosition="{$startPosition}" maxRecords="{$recordsPerPage}" outputFormat="application/xml"
                         resultType="results" service="CSW" version="2.0.2"
                         outputSchema="http://www.isotc211.org/2005/gmd">
+            <xsl:if test="number($hopCount) > 0">
+                <csw:DistributedSearch hopCount="{$hopCount}"/>
+            </xsl:if>
             <csw:Query typeNames="gmd:MD_Metadata" xmlns:gmd="http://www.isotc211.org/2005/gmd">
                 <csw:ElementSetName>full</csw:ElementSetName>
                 <csw:Constraint version="1.1.0">

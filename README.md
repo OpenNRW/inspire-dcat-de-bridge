@@ -51,6 +51,7 @@ The available parameters in the camel-oai-pmh.properties file are:
 * oai-pmh.db.item.csw.TYPE: should be one of inspire, inspireSoap11 or inspireSoap11, depending on the protocol of the Geoportal
 * oai-pmh.db.item.csw.URL: GetRecords URL of the geoportal to be harvested
 * oai-pmh.db.item.csw.sortResults: toggle whether the results should be sorted or not. Possible values are `true` and `false`. Defaults to `false`.
+* oai-pmh.db.item.csw.hopCount: set the hop count used for distributed searchs. Defaults to `0`.
 * oai-pmh.db.item.ckan.TYPE: currently only ckan is supported
 * oai-pmh.db.item.ckan.URL: CKAN catalog URL to be harvested
 

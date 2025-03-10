@@ -83,6 +83,9 @@
             <setHeader name="sortResults">
                 <simple>{{db.item.csw.sortResults}}</simple>
             </setHeader>
+            <setHeader name="hopCount">
+                <simple>{{db.item.csw.hopCount}}</simple>
+            </setHeader>
             <removeHeader name="page"/>
             <removeHeader name="cookie"/>
             <!-- we need some element for xsl input, but the result only depends on header (request) parameters -->
@@ -168,6 +171,9 @@
          the format "id1|id2|id3|..." -->
         <route>
             <from uri="direct:getCoupledServices"/>
+            <setHeader name="hopCount">
+                <simple>{{db.item.csw.hopCount}}</simple>
+            </setHeader>
             <setBody>
                 <constant>&lt;dummy/&gt;</constant>
             </setBody>
@@ -240,6 +246,9 @@
             </setHeader>
             <setHeader name="sortResults">
                 <simple>{{db.item.csw.sortResults}}</simple>
+            </setHeader>
+            <setHeader name="hopCount">
+                <simple>{{db.item.csw.hopCount}}</simple>
             </setHeader>
             <setHeader name="cswServiceShowMetadataBaseUrl">
                 <simple>{{csw.serviceShowMetadata.URL}}</simple>

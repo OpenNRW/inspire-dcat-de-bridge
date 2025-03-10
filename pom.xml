@@ -305,6 +305,7 @@
         <oai-pmh.db.item.csw.TYPE>inspire</oai-pmh.db.item.csw.TYPE>
         <oai-pmh.db.item.csw.URL>https://localhost:8080/soapServices/CSWStartup</oai-pmh.db.item.csw.URL>
         <oai-pmh.db.item.csw.sortResults>false</oai-pmh.db.item.csw.sortResults>
+        <oai-pmh.db.item.csw.hopCount>0</oai-pmh.db.item.csw.hopCount>
         <oai-pmh.db.item.ckan.TYPE>ckan</oai-pmh.db.item.ckan.TYPE>
         <oai-pmh.db.item.ckan.URL>https://localhost:9090</oai-pmh.db.item.ckan.URL>
         <oai-pmh.dcatde.contributorID>http://dcat-ap.de/def/contributors/gdiDE</oai-pmh.dcatde.contributorID>
