@@ -117,6 +117,10 @@ With the default properties, you can access the catalog on
 The records are fetched in the same way and from the same portal as for the OAI-PMH endpoint. Only the output format is
 different, such that it can be used with a DCAT-AP.de RDF harvester.
 
+Alternatively individual RDF datasets can be requested using this endpoint:
+  
+          http://localhost:8080/omdf/gp-csw/rdf/<identifier>
+
 ##### Further Reading
 
 * http://www.openarchives.org/OAI/openarchivesprotocol.html
