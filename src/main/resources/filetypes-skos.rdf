@@ -4549,6 +4549,23 @@
             </at:MappedCode>
         </at:op-mapped-code>
     </skos:Concept>
+    <skos:Concept rdf:about="http://publications.europa.eu/resource/authority/file-type/WMTS_SRVC" at:deprecated="false">
+        <skos:inScheme rdf:resource="http://publications.europa.eu/resource/authority/file-type" />
+        <at:authority-code>WMTS_SRVC</at:authority-code>
+        <at:op-code>WMTS_SRVC</at:op-code>
+        <atold:op-code>WMTS_SRVC</atold:op-code>
+        <dc:identifier>WMTS_SRVC</dc:identifier>
+        <at:start.use>2010-04-06</at:start.use>
+        <skos:prefLabel xml:lang="en">WMTS</skos:prefLabel>
+        <skos:prefLabel xml:lang="et">WMTS</skos:prefLabel>
+        <skos:altLabel xml:lang="en">Web Map Tile Service</skos:altLabel>
+        <at:op-mapped-code>
+            <at:MappedCode>
+                <dc:source>is-nonPropExt</dc:source>
+                <at:legacy-code>true</at:legacy-code>
+            </at:MappedCode>
+        </at:op-mapped-code>
+    </skos:Concept>
     <skos:Concept rdf:about="http://publications.europa.eu/resource/authority/file-type/HDT" at:deprecated="false">
         <skos:inScheme rdf:resource="http://publications.europa.eu/resource/authority/file-type" />
         <at:authority-code>HDT</at:authority-code>
