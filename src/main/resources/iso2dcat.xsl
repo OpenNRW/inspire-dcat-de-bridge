@@ -181,7 +181,7 @@
     </xsl:template>
 
     <xsl:template name="datasetURI">
-        <xsl:variable name="identifier" select="string(gmd:identificationInfo[1]/*/gmd:citation/gmd:CI_Citation/gmd:identifier/gmd:MD_Identifier/gmd:code/gco:CharacterString)"/>
+        <xsl:variable name="identifier" select="string(gmd:identificationInfo[1]/*/gmd:citation/gmd:CI_Citation/gmd:identifier[1]/gmd:MD_Identifier/gmd:code/gco:CharacterString)"/>
         <xsl:variable name="fileIdentifier" select="string(gmd:fileIdentifier/gco:CharacterString)"/>
         <xsl:variable name="metadataUri" select="replace($cswServiceShowMetadataBaseUrl, ' ', '')"/>
         <xsl:choose>
