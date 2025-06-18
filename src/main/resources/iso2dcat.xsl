@@ -163,16 +163,19 @@
             <xsl:apply-templates select="gmd:identificationInfo[1]/*/gmd:resourceMaintenance/*/gmd:maintenanceAndUpdateFrequency/*/@codeListValue"/>
             <xsl:apply-templates select="gmd:hierarchyLevel"/>
 
-            <!--dcat:distribution-->
-            <xsl:call-template name="dataDistribution"/>
-
-            <xsl:call-template name="dcatTheme"/>
-
-            <!--dcatap:applicableLegislation dcatap:hvdCategory-->
             <xsl:variable name="hvdKeywords" select="gmd:identificationInfo/*/gmd:descriptiveKeywords/gmd:MD_Keywords[
                         (gmd:thesaurusName/gmd:CI_Citation/gmd:title/gco:CharacterString = 'High-value dataset categories' or
                         gmd:thesaurusName/gmd:CI_Citation/gmd:title/gmx:Anchor/@xlink:href = 'http://data.europa.eu/bna/asd487ae75') and
                         gmd:thesaurusName/gmd:CI_Citation/gmd:date/*[gmd:dateType/*/@codeListValue='publication']/gmd:date/*[text() castable as xs:date and xs:date(text()) >= xs:date('2023-09-27')]]"/>
+
+            <!--dcat:distribution-->
+            <xsl:call-template name="dataDistribution">
+                <xsl:with-param name="hvdKeywords" select="$hvdKeywords"/>
+            </xsl:call-template>
+
+            <xsl:call-template name="dcatTheme"/>
+
+            <!--dcatap:applicableLegislation dcatap:hvdCategory-->
             <xsl:if test="$hvdKeywords">
                 <dcatap:applicableLegislation rdf:resource="http://data.europa.eu/eli/reg_impl/2023/138/oj"/>
                 <xsl:apply-templates select="$hvdKeywords" mode="hvd"/>
@@ -733,8 +736,11 @@
     </xsl:template>
 
     <xsl:template name="dataDistribution">
+        <xsl:param name="hvdKeywords"/>
         <xsl:variable name="distributionLinks" select="gmd:distributionInfo/*/gmd:transferOptions/*/gmd:onLine/*[gmd:function/*/@codeListValue='download' and gmd:linkage/*[text()]]"/>
-        <xsl:apply-templates select="$distributionLinks" mode="nrw"/>
+        <xsl:apply-templates select="$distributionLinks" mode="nrw">
+            <xsl:with-param name="hvdKeywords" select="$hvdKeywords"/>
+        </xsl:apply-templates>
         <!-- read and store license information start -->
         <xsl:variable name="accessConstraints" select="gmd:identificationInfo[1]/*/gmd:resourceConstraints/*[*/gmd:MD_RestrictionCode/@codeListValue=$c_other_restrictions]/gmd:otherConstraints[gco:CharacterString != $c_no_limitation]"/>
         <xsl:variable name="accessConstraintsJson" select="$accessConstraints[starts-with(normalize-space(gco:CharacterString), '{')]"/>
@@ -744,12 +750,14 @@
         <xsl:apply-templates select="$coupledServices/csw:GetRecordsResponse/csw:SearchResults/gmd:MD_Metadata[gmd:identificationInfo/*/srv:operatesOn/@xlink:href = $resourceIdentifier or gmd:identificationInfo/*/srv:operatesOn/@uuidref = $resourceIdentifier]" mode="serviceDistribution">
             <xsl:with-param name="licenseInMainMetadata" select="if (count($accessConstraintsJson) &gt; 0) then $accessConstraintsJson[1] else null"/>
             <xsl:with-param name="lastModifiedInMainMetadata" select="gmd:dateStamp/*"/>
+            <xsl:with-param name="hvdKeywords" select="$hvdKeywords"/>
         </xsl:apply-templates>
     </xsl:template>
 
     <xsl:template match="gmd:MD_Metadata" mode="serviceDistribution">
         <xsl:param name="licenseInMainMetadata"/>
         <xsl:param name="lastModifiedInMainMetadata"/>
+        <xsl:param name="hvdKeywords"/>
         <xsl:variable name="lastModified" select="gmd:dateStamp/*"/>
         <xsl:variable name="serviceType" select="string(gmd:identificationInfo/*/srv:serviceType/*)"/>
         <xsl:variable name="serviceTypeVersion" select="gmd:identificationInfo/*/srv:serviceTypeVersion/*"/>
@@ -802,6 +810,9 @@
                 <xsl:call-template name="constraints">
                     <xsl:with-param name="licenseInMainMetadata" select="$licenseInMainMetadata"/>
                 </xsl:call-template>
+                <xsl:if test="$hvdKeywords">
+                    <dcatap:applicableLegislation rdf:resource="http://data.europa.eu/eli/reg_impl/2023/138/oj"/>
+                </xsl:if>
             </dcat:Distribution>
         </dcat:distribution>
     </xsl:template>
@@ -814,6 +825,7 @@
     </xsl:template>
 
     <xsl:template match="gmd:CI_OnlineResource" mode="nrw">
+        <xsl:param name="hvdKeywords"/>
         <dcat:distribution>
             <dcat:Distribution rdf:about="{gmd:linkage/*}#distribution">
                 <xsl:variable name="linkage" select="string(gmd:linkage/*)"/>
@@ -852,6 +864,9 @@
                 <xsl:apply-templates select="../../../../gmd:transferOptions/*/gmd:onLine/*[gmd:function/*/@codeListValue='information' and gmd:linkage/*[text()]]"/>
                 <xsl:apply-templates select="gmd:applicationProfile/gco:CharacterString[text()] | ancestor::gmd:distributionInfo/*/gmd:distributionFormat[1]/*/gmd:name/gco:CharacterString[text()]"/>
                 <xsl:call-template name="constraints"/>
+                <xsl:if test="$hvdKeywords">
+                    <dcatap:applicableLegislation rdf:resource="http://data.europa.eu/eli/reg_impl/2023/138/oj"/>
+                </xsl:if>
             </dcat:Distribution>
         </dcat:distribution>
     </xsl:template>
