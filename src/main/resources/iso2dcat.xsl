@@ -1226,8 +1226,12 @@
         <dct:accrualPeriodicity rdf:resource="http://publications.europa.eu/resource/authority/frequency/UNKNOWN"/>
     </xsl:template>
 
-    <xsl:template match="gmd:maintenanceAndUpdateFrequency/*/@codeListValue[.='asNeeded' or .='notPlanned']">
-        <dct:accrualPeriodicity rdf:resource="{concat('http://inspire.ec.europa.eu/metadata-codelist/MaintenanceFrequencyCode/', .)}"/>
+    <xsl:template match="gmd:maintenanceAndUpdateFrequency/*/@codeListValue[.='asNeeded']">
+        <dct:accrualPeriodicity rdf:resource="http://publications.europa.eu/resource/authority/frequency/AS_NEEDED"/>
+    </xsl:template>
+
+    <xsl:template match="gmd:maintenanceAndUpdateFrequency/*/@codeListValue[.='notPlanned']">
+        <dct:accrualPeriodicity rdf:resource="http://publications.europa.eu/resource/authority/frequency/NOT_PLANNED"/>
     </xsl:template>
 
     <xsl:template name="dcatTheme">
